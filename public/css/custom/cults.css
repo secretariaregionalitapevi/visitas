@@ -1,0 +1,126 @@
+
+
+.dataTables_info{
+  color: #494949;
+}
+.list-content {
+  display: none;
+  padding: 10px;
+  list-style-type: none;
+}
+
+.table-bordered,
+.table-bordered th,
+.table-bordered td {
+  border: 1px solid #ffffff;
+}
+
+.dataTables_paginate .paginate_button.active {
+  background-color: #84b8a9;
+  color: white;
+}
+
+table.dataTable tbody td {
+  vertical-align: middle;
+  background-color: #f3f3f3;
+}
+
+.input-group-filter {
+  display: flex;
+  align-items: center;
+  width: 52%;
+  /* Defina a largura inicial */
+}
+
+@media (max-width: 768px) {
+  .input-group-filter {
+      width: 100%;
+      /* Define a largura para 100% em telas menores que 768px (tamanhos de tela de dispositivos móveis) */
+  }
+}
+
+.input-group-filter input {
+  background-color: #f3f3f3;
+  border-color: #f3f3f3;
+  padding: .5rem;
+  border-radius: .375rem;
+}
+
+.input-group-filter input {
+  margin-right: 10px;
+}
+
+.input-group-filter button {
+  margin-left: 5px;
+}
+
+.input-group-filter input,
+.input-group-filter button {
+  height: 38px;
+  /* Define a altura fixa dos elementos */
+
+}
+
+/* CARDS */
+.card {
+  border: none;
+  /* Remove a borda */
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+  /* Adiciona sombra */
+  margin-bottom: 10px;
+  /* Adiciona espaço entre os cards */
+
+}
+
+.card h6 {
+  color: #0C4474;
+}
+
+.img-small {
+  height: 35px;
+  width: 45px;
+}
+
+/* FILTROS */
+.day-label,
+.city-label {
+  display: inline-block;
+  padding: 4px;
+  border: 1px solid #ffffff;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  margin: 5px;
+  cursor: pointer;
+
+}
+
+.day-label input[type="checkbox"] {
+  display: none;
+}
+
+.city-label input[type="checkbox"] {
+  display: none;
+}
+
+.day-label.selected {
+  background-color: #a5cfec;
+  border-color: #0c4474;
+}
+
+.city-label.selected {
+  background-color: #a5cfec;
+  border-color: #0c4474;
+}
+
+.icon-circle {
+  display: inline-block;
+  width: 50px; /* Largura do círculo */
+  height: 50px; /* Altura do círculo */
+  line-height: 50px; /* Alinha o ícone verticalmente */
+  border-radius: 50%; /* Faz o círculo */
+  background-color: #0c4474; /* Cor de fundo do círculo */
+  color: white; /* Cor do ícone */
+  text-align: center; /* Centraliza o ícone horizontalmente */
+  font-size: 2em; /* Tamanho do ícone */
+  
+}

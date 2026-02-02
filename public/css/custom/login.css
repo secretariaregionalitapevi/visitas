@@ -1,0 +1,464 @@
+/* ===== ESTILOS DO LOGIN V2 ===== */
+
+/* Variáveis CSS específicas para o login */
+:root {
+    --primary-color: #043d60;
+    --secondary-color: #d4d9e2;
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --accent-color: #007bff;
+    --light-bg: #f8f9fa;
+    --white: #ffffff;
+    --text-dark: #333333;
+    --text-muted: #6c757d;
+    --border-radius: 16px;
+    --shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* Container principal com melhor UX */
+.page-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    position: relative;
+}
+
+/* Link de Voltar - Melhor posicionamento */
+.back-link {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 25px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    z-index: 1000;
+}
+
+.back-link:hover {
+    transform: translateX(-3px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    color: var(--primary-color);
+    text-decoration: none;
+    background: rgba(255, 255, 255, 1);
+}
+
+.back-link i {
+    font-size: 12px;
+    transition: transform 0.3s ease;
+}
+
+.back-link:hover i {
+    transform: translateX(-2px);
+}
+
+.login-container {
+    max-width: 450px;
+    width: 100%;
+    margin-top: 60px; /* Espaço para o botão de voltar */
+}
+
+.login-card {
+    background: var(--white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    position: relative;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.login-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+}
+
+.login-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255,255,255,0.05) 0%, transparent 100%);
+    pointer-events: none;
+}
+
+.login-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #0a5a8a 100%);
+    color: var(--white);
+    padding: 30px 40px;
+    text-align: center;
+    position: relative;
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+
+.login-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+    pointer-events: none;
+}
+
+.logo-in-header {
+    margin-bottom: 15px;
+}
+
+.logo-in-header img {
+    max-width: 180px;
+    height: auto;
+    filter: brightness(0) invert(1) drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+}
+
+.login-header h3 {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 10px 0 5px 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.login-header .subtitle {
+    font-size: 14px;
+    opacity: 0.9;
+    margin: 0;
+    font-weight: 300;
+}
+
+.login-body {
+    padding: 35px 40px;
+    position: relative;
+    z-index: 1;
+}
+
+.alert {
+    border-radius: 12px;
+    border: none;
+    padding: 15px;
+    margin-bottom: 25px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.alert-danger {
+    background: rgba(220, 53, 69, 0.1);
+    color: var(--danger-color);
+    border-left: 4px solid var(--danger-color);
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+    display: block;
+    font-size: 14px;
+}
+
+.input-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-icon {
+    position: absolute;
+    left: 15px;
+    color: var(--text-muted);
+    font-size: 16px;
+    z-index: 2;
+    transition: color 0.3s ease;
+}
+
+.form-control {
+    width: 100%;
+    padding: 14px 20px 14px 45px;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    background: var(--white);
+    color: var(--text-dark);
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(4, 61, 96, 0.1);
+    transform: translateY(-1px);
+}
+
+.form-control:focus + .input-icon {
+    color: var(--primary-color);
+}
+
+.form-control::placeholder {
+    color: var(--text-muted);
+}
+
+/* Botão de Login Melhorado */
+.login-button {
+    width: 100%;
+    padding: 16px 24px;
+    background: linear-gradient(135deg, var(--primary-color) 0%, #0a5a8a 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(4, 61, 96, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+    margin-top: 10px;
+}
+
+.login-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.login-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(4, 61, 96, 0.4);
+}
+
+.login-button:hover::before {
+    left: 100%;
+}
+
+.login-button:active {
+    transform: translateY(0);
+}
+
+.login-button.loading {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    cursor: not-allowed;
+}
+
+.login-button i {
+    font-size: 14px;
+    transition: transform 0.3s ease;
+}
+
+.login-button:hover i {
+    transform: translateX(2px);
+}
+
+/* Rodapé Melhorado */
+.login-footer {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 18px 40px;
+    text-align: center;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    position: relative;
+}
+
+.login-footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0,0,0,0.1), transparent);
+}
+
+.footer-text {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.footer-text i {
+    color: var(--primary-color);
+    font-size: 13px;
+}
+
+/* Efeitos de Foco Melhorados */
+.input-group.focused .input-icon {
+    color: var(--primary-color);
+}
+
+.input-group.focused .form-control {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(4, 61, 96, 0.1);
+}
+
+/* Melhorar feedback visual dos campos */
+.form-control.has-value {
+    border-color: var(--success-color);
+    background-color: rgba(40, 167, 69, 0.02);
+}
+
+/* Melhorar acessibilidade para navegação por teclado */
+.keyboard-navigation .login-button:focus {
+    outline: 3px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+.keyboard-navigation .form-control:focus {
+    outline: 3px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* Melhorar animações suaves */
+.login-card {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsividade Melhorada */
+@media (max-width: 768px) {
+    .page-container {
+        padding: 15px;
+    }
+    
+    .back-link {
+        top: 15px;
+        left: 15px;
+        padding: 8px 14px;
+        font-size: 13px;
+    }
+    
+    .login-container {
+        margin-top: 50px;
+        max-width: 100%;
+    }
+    
+    .login-header {
+        padding: 25px 30px;
+    }
+    
+    .login-body {
+        padding: 30px 25px;
+    }
+    
+    .login-footer {
+        padding: 15px 25px;
+    }
+    
+    .login-header h3 {
+        font-size: 22px;
+    }
+    
+    .logo-in-header img {
+        max-width: 150px;
+    }
+}
+
+@media (max-width: 480px) {
+    .page-container {
+        padding: 10px;
+    }
+    
+    .back-link {
+        position: relative;
+        top: auto;
+        left: auto;
+        margin-bottom: 15px;
+        align-self: flex-start;
+        margin-left: 10px;
+    }
+    
+    .login-container {
+        margin-top: 0;
+    }
+    
+    .login-header {
+        padding: 20px 25px;
+    }
+    
+    .login-body {
+        padding: 25px 20px;
+    }
+    
+    .login-footer {
+        padding: 15px 20px;
+    }
+    
+    .login-header h3 {
+        font-size: 20px;
+    }
+    
+    .logo-in-header img {
+        max-width: 120px;
+    }
+    
+    .form-control {
+        padding: 12px 16px 12px 40px;
+        font-size: 15px;
+    }
+    
+    .login-button {
+        padding: 14px 20px;
+        font-size: 15px;
+    }
+    
+    .footer-text {
+        font-size: 11px;
+    }
+} 

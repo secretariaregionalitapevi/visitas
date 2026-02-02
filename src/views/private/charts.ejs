@@ -1,0 +1,624 @@
+<style>
+    <style>
+.chart-scroll-container {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 20px;
+    scrollbar-width: thin;
+    scrollbar-color: #888 #f1f1f1;
+}
+
+.chart-scroll-container::-webkit-scrollbar {
+    height: 8px;
+}
+
+.chart-scroll-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.chart-scroll-container::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.chart-scroll-container::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Largura dinâmica baseada no número de itens */
+.chart-container-wide {
+    min-width: calc(var(--items-count) * 80px);
+    min-width: max(2000px, calc(var(--items-count) * 80px));
+}
+
+.chart-info-panel {
+        display: flex;
+        justify-content: space-around;
+        padding: 20px 24px;
+        background: linear-gradient(135deg, var(--bg-blue) 0%, rgba(4, 61, 96, 0.02) 100%);
+        border-top: 1px solid rgba(4, 61, 96, 0.08);
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+    .chart-stat {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex: 1;
+        min-width: 140px;
+        padding: 12px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(4, 61, 96, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .chart-stat:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(4, 61, 96, 0.15);
+    }
+
+    
+    .stat-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        color: white;
+        background: var(--gradient-primary);
+        box-shadow: 0 2px 8px rgba(4, 61, 96, 0.3);
+    }
+
+    .stat-content {
+        flex: 1;
+    }
+
+    .stat-label {
+        font-size: 12px;
+        color: #6c757d;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+    }
+
+    .stat-value {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--primary-blue);
+        line-height: 1.2;
+    }
+</style>
+
+</style>
+
+<!-- Header moderno com filtro de período - Mobile First -->
+<div class="header-card dashboard-header">
+    <div class="dashboard-title-section">
+        <div class="title-wrapper">
+            <div class="title-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="title-content">
+                <h2 class="dashboard-title">Dashboard</h2>
+                <p class="dashboard-subtitle">Análise completa de visitas e estatísticas</p>
+            </div>
+        </div>
+
+        <div class="filter-section">
+            <form id="search" method="POST" accept-charset="utf-8">
+                <div class="filter-wrapper">
+                    <div class="select-wrapper">
+                        <select id="monthSelect" name="month" class="form-select">
+                            <option value=""> Selecione o mês</option>
+                            <option value=1>Janeiro</option>
+                            <option value=2>Fevereiro</option>
+                            <option value=3>Março</option>
+                            <option value=4>Abril</option>
+                            <option value=5>Maio</option>
+                            <option value=6>Junho</option>
+                            <option value=7>Julho</option>
+                            <option value=8>Agosto</option>
+                            <option value=9>Setembro</option>
+                            <option value=10>Outubro</option>
+                            <option value=11>Novembro</option>
+                            <option value=12>Dezembro</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn btn-primary search-btn" onclick="searchByMonth()">
+                        <i class="fas fa-search"></i>
+                        <span class="btn-text">Filtrar</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Status Cards -->
+<div class="status-cards-grid">
+    <div class="status-card period-card">
+        <div class="status-icon">
+            <i class="fas fa-calendar-check"></i>
+        </div>
+        <div class="status-content">
+            <p class="status-label">Período Selecionado</p>
+            <p class="status-value"><%- month %></p>
+        </div>
+    </div>
+
+    <% if (message !=='' ) { %>
+        <div class="status-card error-card">
+            <div class="status-icon error">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="status-content">
+                <p class="status-label">Atenção</p>
+                <p class="status-value">
+                    <%= message %>
+                </p>
+            </div>
+        </div>
+        <% } %>
+</div>
+
+<!-- Card de Conclusão por Município -->
+<div class="header-card stats-card dashboard-header">
+    <div class="card-header-clean">
+        <div class="header-main">
+            <div class="header-content">
+                <h3 class="header-title mb-2">Taxa de Conclusão (%) por Município</h3>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="table-responsive modern-table">
+        <table id="housesOfPrayerTable" class="table table-striped">
+            <thead>
+                <tr>
+                    <th class="col-municipality">Município</th>
+                    <th class="col-launches">Lançamentos</th>
+                    <th class="col-progress">Igrejas</th>
+                    <th class="col-progress">Taxa de Conclusão</th>
+                    <th class="col-actions">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% housesOfPrayerStats.forEach(record=> {
+                    let progressClass = 'red';
+                    let statusIcon = 'fas fa-times-circle';
+                    let statusText = 'Crítico';
+
+                    if (record.fill_percentage >= 80) {
+                    progressClass = 'green';
+                    statusIcon = 'fas fa-check-circle';
+                    statusText = 'Excelente';
+                    } else if (record.fill_percentage >= 60) {
+                    progressClass = 'blue';
+                    statusIcon = 'fas fa-info-circle';
+                    statusText = 'Bom';
+                    } else if (record.fill_percentage >= 30) {
+                    progressClass = 'yellow';
+                    statusIcon = 'fas fa-exclamation-circle';
+                    statusText = 'Regular';
+                    }
+                    %>
+                    <tr class="table-row-clean">
+                        <td class="municipality-cell">
+                            <div class="municipality-info">
+                                <div class="municipality-name">
+                                    <%= record.city %>
+                                </div>
+                                <div class="municipality-status status-<%= progressClass %>">
+                                    <%= statusText %>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="centered-cell">
+                            <div class="value-badge success">
+                                <%= record.filled_houses %>
+                            </div>
+                        </td>
+                        <td class="centered-cell">
+                            <div class="value-badge neutral">
+                                <%= record.total_houses %>
+                            </div>
+                        </td>
+                        <td class="progress-cell-modern">
+                            <div class="progress-container">
+                                <div class="progress-value">
+                                    <%= record.fill_percentage %>%
+                                </div>
+                                <div class="progress-track">
+                                    <div class="progress-fill progress-<%= progressClass %>"
+                                        style="--w: <%= record.fill_percentage %>%;">
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="centered-cell">
+                            <a href="/restrito/visitas#pendings" class="action-button">
+                                <i class="fas fa-eye"></i>
+                                Ver
+                            </a>
+                        </td>
+                        
+                    </tr>
+                    <% }) %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="chart-info-panel">
+    <div class="chart-stat">
+        <div class="stat-icon">
+            <i class="fas fa-chart-line"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-label">Total de <%= barChartXAxisLabel %></div>
+            <div class="stat-value"><%= barChartLabels ? barChartLabels.length : 0 %></div>
+        </div>
+    </div>
+    <div class="chart-stat">
+        <div class="stat-icon">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-label">Total de Visitas</div>
+            <div class="stat-value"><%= barChartValues && barChartValues.length ? barChartValues.reduce((a, b) => (Number(a) || 0) + (Number(b) || 0), 0).toLocaleString('pt-BR') : 0 %></div>
+        </div>
+    </div>
+</div>
+
+<% if (barChartXAxisLabel === 'Municípios') { %>
+
+<!-- Card de Gráfico de Barras -->
+<div class="header-card stats-card dashboard-header">
+    <div class="card-header-clean">
+        <div class="header-main">
+            <div class="header-content">
+                <h3 class="header-title mb-2">Quantidade de Visitas por Município</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="chart-container" style="position: relative; height: 400px; padding: 20px;">
+        <canvas id="municipalityChart"></canvas>
+    </div>
+</div>
+<% } else { %>
+    <div class="header-card stats-card dashboard-header">
+        <div class="card-header-clean">
+            <div class="header-main">
+                <div class="header-content">
+                    <h3 class="header-title mb-2">Quantidade de Visitas por Casa de Oração</h3>
+                </div>
+            </div>
+        </div>
+    
+        <!-- CONTAINER COM SCROLL HORIZONTAL -->
+        <div class="chart-scroll-container" style="overflow-x: auto; padding: 20px;">
+            <div class="chart-container" style="position: relative; height: 400px; min-width: 2000px;">
+                <canvas id="cityChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <% } %>
+
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const ctx = document.getElementById('municipalityChart').getContext('2d');
+
+    // Dados do gráfico vindos do servidor
+    const labels = <%- JSON.stringify(barChartLabels) %>;
+    const data = <%- JSON.stringify(barChartValues) %>;
+    const title = '<%= barChartTitle %>';
+    const xAxisLabel = '<%= barChartXAxisLabel %>'; // 15% de espaço extra
+
+        // Cores vibrantes diferentes para cada barra
+        const colorPalette = [
+            '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
+            '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9',
+            '#F8C471', '#82E0AA', '#F1948A', '#85C1E9', '#D7DBDD'
+        ];
+
+        const backgroundColors = labels.map((_, index) =>
+            colorPalette[index % colorPalette.length]
+        );
+
+        const chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Quantidade de Visitas',
+                    data: data,
+                    backgroundColor: backgroundColors,
+                    borderColor: backgroundColors.map(color => color + '80'),
+                    borderWidth: 1,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                return `${context.parsed.y} visitas realizadas`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: Math.max(...data) + Math.ceil(Math.max(...data) * 0.2), // 20% a mais que o maior valor
+                        ticks: {
+                            stepSize: 1
+                        },
+                        grid: {
+                            color: 'rgba(0,0,0,0.1)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 0
+                        }
+                    }
+                },
+                animation: {
+                    duration: 1200,
+                    easing: 'easeOutQuart',
+                    onComplete: function () {
+                        const chartInstance = this;
+                        const ctx = chartInstance.ctx;
+
+                        ctx.font = 'bold 14px Arial';
+                        ctx.fillStyle = '#333';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+
+                        this.data.datasets.forEach(function (dataset, i) {
+                            const meta = chartInstance.getDatasetMeta(i);
+                            meta.data.forEach(function (bar, index) {
+                                const data = dataset.data[index];
+                                if (data > 0) { // Só mostra se houver visitas
+                                    ctx.fillText(data, bar.x, bar.y - 8);
+                                }
+                            });
+                        });
+                    }
+                }
+            }
+        });
+    });
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const ctx = document.getElementById('cityChart');
+    if (!ctx) return; // Sai se não for o cityChart
+    
+    const labels = <%- JSON.stringify(barChartLabels) %>;
+    const data = <%- JSON.stringify(barChartValues) %>;
+    
+    // AJUSTA LARGURA DINAMICAMENTE
+    const minWidth = Math.max(2000, labels.length * 100); // 100px por barra
+    ctx.parentElement.style.minWidth = minWidth + 'px';
+    
+    // Resto do código do gráfico...
+    const colorPalette = [
+        '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
+        '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9',
+        '#F8C471', '#82E0AA', '#F1948A', '#85C1E9', '#D7DBDD'
+    ];
+
+        const backgroundColors = labels.map((_, index) =>
+            colorPalette[index % colorPalette.length]
+        );
+
+        const chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Quantidade de Visitas',
+                    data: data,
+                    backgroundColor: backgroundColors,
+                    borderColor: backgroundColors.map(color => color + '80'),
+                    borderWidth: 1,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                return `${context.parsed.y} visitas realizadas`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: Math.max(...data) + Math.ceil(Math.max(...data) * 0.2), // 20% a mais que o maior valor
+                        ticks: {
+                            stepSize: 1
+                        },
+                        grid: {
+                            color: 'rgba(0,0,0,0.1)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 0
+                        }
+                    }
+                },
+                animation: {
+                    duration: 1200,
+                    easing: 'easeOutQuart',
+                    onComplete: function () {
+                        const chartInstance = this;
+                        const ctx = chartInstance.ctx;
+
+                        ctx.font = 'bold 14px Arial';
+                        ctx.fillStyle = '#333';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+
+                        this.data.datasets.forEach(function (dataset, i) {
+                            const meta = chartInstance.getDatasetMeta(i);
+                            meta.data.forEach(function (bar, index) {
+                                const data = dataset.data[index];
+                                if (data > 0) { // Só mostra se houver visitas
+                                    ctx.fillText(data, bar.x, bar.y - 8);
+                                }
+                            });
+                        });
+                    }
+                }
+            }
+        });
+    });
+</script>
+
+
+<div class="header-card card-chart">
+    <div class="card-header-clean alert-style">
+        <div class="header-main">
+
+            <div class="header-content">
+                <h3 class="header-title mb-2">Casas de oração sem lançamento nos últimos 90 dias</h3>
+            </div>
+        </div>
+
+    </div>
+
+    <% if (churches.length===0) { %>
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h4 class="empty-title">Parabéns!</h4>
+            <p class="empty-message">Não existem casas de oração sem lançamentos nos ultimos 90 dias.</p>
+        </div>
+        <% } else { %>
+            <div class="table-responsive modern-table alert-table">
+                <table id="churchesTable" class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th class="col-church">Casa de Oração</th>
+                            <th class="col-location">Município</th>
+                            <th class="col-status">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% churches.forEach((record, index)=> { %>
+                            <tr class="table-row-clean alert-row">
+                                <td class="church-cell-clean">
+                                    <div class="church-name-clean">
+                                        <%= record.name %>
+                                    </div>
+                                </td>
+                                <td class="centered-cell">
+                                    <div class="location-badge-clean">
+                                        <%= record.city %>
+                                    </div>
+                                </td>
+                                <td class="centered-cell">
+                                    <div class="status-badge-pending">
+                                        Pendente
+                                    </div>
+                                </td>
+                            </tr>
+                            <% }) %>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card-footer-modern mt-3">
+                <div class="footer-info text-center">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Estas casas de oração necessitam de atenção para manter os registros atualizados.</span>
+                </div>
+            </div>
+            <% } %>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        if (window.jQuery && jQuery.fn.DataTable) {
+            const table = $('#churchesTable').DataTable({
+                paging: true,
+                searching: true,
+                info: false,
+                lengthChange: false,
+                pageLength: 10,
+                language: {
+                    search: 'Pesquisar:',
+                    paginate: { previous: 'Anterior', next: 'Próximo' },
+                    zeroRecords: 'Nenhum registro encontrado'
+                }
+            });
+        }
+    });
+</script>
+
+<script>
+    // Funcionalidades básicas
+    function searchByMonth() {
+        const selectedMonth = document.getElementById('monthSelect').value;
+
+        if (selectedMonth) {
+            let url = '/restrito/graficos?month=' + selectedMonth;
+            window.location.href = url;
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Erro!',
+                text: 'Por favor, selecione um mês antes de prosseguir.',
+                confirmButtonText: 'OK'
+            });
+        }
+    }
+
+    // Seleciona o mês anterior por padrão
+    document.addEventListener('DOMContentLoaded', function () {
+        const currentDate = new Date();
+        const previousMonth = currentDate.getMonth() === 0 ? 12 : currentDate.getMonth();
+        document.getElementById('monthSelect').value = previousMonth;
+    });
+
+    
+</script>

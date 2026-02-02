@@ -1,0 +1,35 @@
+{
+  "background_color": "#ffffff",
+  "description": "Congregação Cristã no Brasil - Regional Itapevi",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "Visitas - Regional Itapevi",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "Visitas - Regional Itapevi",
+  "start_url": "/",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/static/images/app-white.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/images/app-white.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/static/images/logo_ccb_white.png",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/images/icon.png",
+      "type": "image/png",
+      "sizes": "180x180"
+    }
+  ]
+}

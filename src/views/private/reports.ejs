@@ -1,0 +1,228 @@
+<!-- Styles and scripts -->
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+
+<style>
+    table#registrosTable th,
+    table#registrosTable td {
+        border: 1px solid #FFFFFF;
+        padding: 6px;
+        text-align: center;
+        text-transform: uppercase;
+    }
+
+    
+    table#registrosTable tbody tr:nth-child(odd) {
+        background-color: #f2f9ff;
+    }
+
+    table#registrosTable tbody tr:nth-child(even) {
+        background-color: #DEEAF7;
+    }
+
+    .header-flex {
+        display: flex;
+        align-items: center;
+        padding: 20px;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        background: #001F61;
+        color: #fff;
+    }
+
+    .header-title {
+        text-align: center;
+        flex: 1;
+    }
+</style>
+
+<form id="search" class="" method="POST" accept-charset="utf-8">
+    <div class="filter-section">        <div class="filter-wrapper">
+            <div class="select-wrapper">
+                <select id="reportType" class="form-select w-100 ms-1">
+                    <option value="">Tipo de relatório</option>
+                    <option value="general" <%=type==='general' ? 'selected' : '' %>>Geral</option>
+                    <option value="city" <%=type==='city' ? 'selected' : '' %>>Por Município</option>
+                    <option value="no_service" <%=type==='no_service' ? 'selected' : '' %>>Últimos 3 meses sem atendimento</option>
+                </select>
+                
+
+        <select id="monthSelect" name="month" class="form-select w-100 ms-1 mt-2">
+            <option value="">Mês</option>
+            <option value=1>Janeiro</option>
+            <option value=2>Fevereiro</option>
+            <option value=3>Março</option>
+            <option value=4>Abril</option>
+            <option value=5>Maio</option>
+            <option value=6>Junho</option>
+            <option value=7>Julho</option>
+            <option value=8>Agosto</option>
+            <option value=9>Setembro</option>
+            <option value=10>Outubro</option>
+            <option value=11>Novembro</option>
+            <option value=12>Dezembro</option>
+        </select>
+
+        <select id="citySelect" name="city" class="form-select w-100 ms-1 mt-2">
+            <option value="">Município</option>
+            <% cities.forEach(city=> { %>
+                <option value="<%= city.city_id %>"><%= city.city %></option>
+                <% }) %>
+
+        </select>
+            </div>
+        </div>
+        <button type="button" class="btn btn-primary ms-1 mt-2 w-100" onclick="fetchReport()">Buscar</button>
+
+    </div>
+    </div>
+</form>
+<% if (error) { %>
+    <div class="alert alert-danger alert-solid text-center" role="alert">Nenhuma informação encontrada.</div>
+    <% } %>
+
+        <% if (recordsGeneral !='' ) { %>
+
+            <div class="header-card">
+                <button type="button" class="btn btn-primary mb-2"
+                    onclick="generatePDF('<%= typeName %>',' <%= month %>')"><i class="fa fa-download"></i>
+                    Exportar</button>
+                <!-- Relatório -->
+                <div id="report">
+                    <div class="header-flex">
+                        <div>
+                            <img src="/static/images/logo-ccb-light-white.png" alt="Logo" style="height: 60px;" />
+                        </div>
+                        <div class="header-title">
+                            <h2 style="margin: 0; font-size: 15pt;">REGISTRO DE VISITAS - <%= regional.name %></h2>
+                            <hr style="width: 400px; margin: 4px auto; border-top: 2px solid #FFFFFF;">
+                            <p style="margin: 0; font-size: 12pt;">
+                                <%= typeName %>
+                            </p>
+                        </div>
+                        <div style="width: 60px;"></div>
+                    </div>
+
+
+                    <!-- Mês -->
+                    <div style="text-align: center; margin-bottom: 10px;">
+                        <h4 class="bg-blue text-white p-2">
+                            <%= month %>
+                        </h4>
+                    </div>
+                    <div class="text-center small">
+                        <small><small>
+                                <strong> GVI:</strong> Visitas para Irmandade | <strong>GVM:</strong> Visitas para
+                                Mocidade | <strong>RF:</strong> Reunião
+                                Familiar |
+                                <strong>RE:</strong> Reunião de Evangelização</small></small>
+                    </div>
+                    <!-- Tabela -->
+                    <div class="table-responsive">
+                        <table id="registrosTable" class="display compact"
+                            style="width:100%; font-size: 12px; border-collapse: collapse;">
+                            <thead>
+                                <tr class="bg-blue text-white">
+                                    <th><%= type==="city" || type==="no_service" ? "Casa de Oração" : "Município" %></th>
+                                    <th>GVI</th>
+                                    <th>GVM</th>
+                                    <th>RF</th>
+                                    <th>RE</th>
+                                    <% if (type !== "no_service") { %>
+                                        <th>Total</th>
+                                    <% } %>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% recordsGeneral.forEach((record, index)=> { %>
+                                    <tr class="<%= index === recordsGeneral.length - 1 && type !== 'no_service' ? 'bg-darkblue font-bold text-white' : '' %>">
+                                        <td><%= type==="general" ? record.city: record.church %></td>
+                                        <td><%= record.gvi || '' %></td>
+                                        <td><%= record.gvm || '' %></td>
+                                        <td><%= record.rf || '' %></td>
+                                        <td><%= record.re || '' %></td>
+                                        <% if (type !== "no_service") { %>
+                                            <td><%= record.amount %></td>
+                                        <% } %>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                            
+                        </table>
+
+                    </div>
+                    <hr>
+                </div>
+            </div>
+            <% } %>
+
+
+                <script>
+                    $(document).ready(function () {
+                        $('#registrosTable').DataTable({
+                            paging: false,
+                            searching: false,
+                            info: false,
+                            ordering: false
+                        });
+                    });
+
+                    function generatePDF(typeName, month) {
+                        const elemento = document.getElementById('report');
+
+                        const opcoes = {
+                            margin: [0.2, 0.4, 1.2, 0.4], // margens em polegadas
+                            filename: `${typeName} - ${month}.pdf`,
+                            image: { type: 'jpeg', quality: 0.98 },
+                            html2canvas: {
+                                scale: 2,
+                                useCORS: true,
+                                scrollY: 0
+                            },
+                            jsPDF: {
+                                unit: 'in',
+                                format: 'a4',
+                                orientation: 'portrait'
+                            },
+                            pagebreak: {
+                                mode: ['css', 'legacy'],
+                                before: '.page-break'
+                            }
+                        };
+
+                        html2pdf().set(opcoes).from(elemento).toPdf().get('pdf').then(function (pdf) {
+                        }).save();
+                    }
+
+
+                </script>
+                <script>
+                  $('#reportType').on('change', function () {
+                    const type = $(this).val();
+                    $('#monthSelect').toggleClass('d-none', !type || type === 'no_service');
+                    $('#citySelect').toggleClass('d-none', type !== 'city' && type !== 'no_service');
+                }).trigger('change');
+
+
+                    function fetchReport() {
+                        const type = $('#reportType').val();
+                        let month = $('#monthSelect').val();
+                        const cityId = $('#citySelect').val();
+
+                        if (!month) {
+                            const now = new Date();
+                            month = now.getMonth() + 1;
+                        }
+                        let url = `/restrito/relatorios?type=${type}`;
+                        if (month) url += `&month=${month}`;
+                        if (cityId) url += `&city_id=${cityId}`;
+
+                        window.location.href = url;
+                    }
+
+                </script>

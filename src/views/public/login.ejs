@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+       <%- include('../head') %>
+    <link rel="stylesheet" href="/static/css/custom/login.css">
+</head>
+
+<body>
+ 
+    <div class="page-container">
+        <!-- Link de Voltar - Melhor posicionamento -->
+        <a href="/" class="back-link" title="Voltar ao Início">
+            <i class="fas fa-arrow-left"></i>
+            <span>Voltar ao Início</span>
+        </a>
+
+        <div class="login-container">
+            <!-- Login Card -->
+            <div class="login-card">
+                <!-- Header -->
+                <div class="login-header">
+                    <!-- Logo no Header -->
+                    <div class="logo-in-header">
+                        <img src="/static/images/logo-ccb-light.png" alt="CCB Logo" />
+                    </div>
+                    <h3>Área Restrita</h3>
+                    <div class="subtitle">Gestão de Visitas</div>
+                </div>
+
+                <!-- Body -->
+                <div class="login-body">
+                    <% if (message && message !== '' ) { %>
+                        <div class="alert alert-danger" role="alert">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <%= message %>
+                        </div>
+                    <% } %>
+
+                    <form action="/restrito/acesso" method="post" id="loginForm">
+                        <!-- Email Field -->
+                        <div class="form-group">
+                            <label class="form-label" for="inputEmailAddress">E-mail</label>
+                            <div class="input-group">
+                                <i class="fas fa-envelope input-icon"></i>
+                                <input 
+                                    class="form-control with-icon" 
+                                    name="email" 
+                                    id="inputEmailAddress" 
+                                    type="email"
+                                    placeholder="Digite seu e-mail"
+                                    required
+                                    autocomplete="email"
+                                >
+                            </div>
+                        </div>
+
+                        <!-- Password Field -->
+                        <div class="form-group">
+                            <label class="form-label" for="inputPassword">Senha</label>
+                            <div class="input-group">
+                                <i class="fas fa-lock input-icon"></i>
+                                <input 
+                                    class="form-control with-icon" 
+                                    name="password" 
+                                    id="inputPassword" 
+                                    type="password"
+                                    placeholder="Digite sua senha"
+                                    required
+                                    autocomplete="current-password"
+                                >
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="form-group">
+                            <button 
+                                type="submit"
+                                data-sitekey="6LccF-0qAAAAAFfO-T6JHBlKpSGMPDThyACAF9Ll"
+                                data-callback="onSubmit"
+                                class="g- login-button"
+                                id="loginButton"
+                            >
+                                <i class="fas fa-sign-in-alt"></i>
+                                <span>Acessar Sistema</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Footer -->
+                <div class="login-footer">
+                    <p class="footer-text">
+                        <i class="fas fa-university"></i>
+                        Congregação Cristã no Brasil - <%= regional.name %>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <script>
+        function onSubmit(token) {
+            const button = document.getElementById('loginButton');
+            button.classList.add('loading');
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Validando...</span>';
+            
+            // Delay to show loading animation
+            setTimeout(() => {
+                document.getElementById("loginForm").submit();
+            }, 500);
+        }
+
+        // Form validation
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            const email = document.getElementById('inputEmailAddress').value;
+            const password = document.getElementById('inputPassword').value;
+            
+            if (!email || !password) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Campos Obrigatórios',
+                    text: 'Por favor, preencha todos os campos.',
+                    confirmButtonColor: '#043d60'
+                });
+                return;
+            }
+            
+            if (!email.includes('@')) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'E-mail Inválido',
+                    text: 'Por favor, digite um e-mail válido.',
+                    confirmButtonColor: '#043d60'
+                });
+                return;
+            }
+        });
+
+        // Enhanced focus effects
+        document.querySelectorAll('.form-control').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.classList.add('focused');
+            });
+            
+            input.addEventListener('blur', function() {
+                this.parentElement.classList.remove('focused');
+            });
+        });
+
+        // Button hover effects
+        const loginButton = document.getElementById('loginButton');
+        if (loginButton) {
+            loginButton.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-2px)';
+            });
+            
+            loginButton.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+            });
+        }
+
+        // Melhorar UX com feedback visual
+        document.querySelectorAll('.form-control').forEach(input => {
+            // Adicionar classe quando o campo tem valor
+            input.addEventListener('input', function() {
+                if (this.value.length > 0) {
+                    this.classList.add('has-value');
+                } else {
+                    this.classList.remove('has-value');
+                }
+            });
+            
+            // Adicionar classe quando o campo é focado
+            input.addEventListener('focus', function() {
+                this.parentElement.classList.add('focused');
+            });
+            
+            input.addEventListener('blur', function() {
+                this.parentElement.classList.remove('focused');
+            });
+        });
+
+        // Auto-focus first input com delay para melhor UX
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                const emailInput = document.getElementById('inputEmailAddress');
+                if (emailInput) {
+                    emailInput.focus();
+                }
+            }, 300);
+        });
+
+        // Melhorar acessibilidade
+        document.addEventListener('keydown', function(e) {
+            // Permitir navegação com Tab
+            if (e.key === 'Tab') {
+                document.body.classList.add('keyboard-navigation');
+            }
+        });
+
+        document.addEventListener('mousedown', function() {
+            document.body.classList.remove('keyboard-navigation');
+        });
+    </script>
+
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</body>
+
+</html>

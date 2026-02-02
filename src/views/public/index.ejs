@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#043d60">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Registros de Visitas">
+    <meta name="description" content="Congregação Cristã no Brasil - <%= regional.name %>">
+    <title><%= regional.name %> - Registros de Visitas</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/images/icon.png" type="image/png">
+    <link rel="icon" href="/static/images/logo_ccb_white.png" type="image/png">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/static/css/custom/index.css">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.css">
+    
+    <style>
+        /* Mantém o componente com a altura do seu campo */
+        .ts-wrapper {
+          width: 100% !important;
+        }
+      
+        .ts-control {
+          min-height: 48px !important;
+          padding: 0 14px !important;
+          display: flex !important;
+          align-items: center !important;     /* centraliza verticalmente */
+          border-radius: 12px !important;
+        }
+      
+        /* Centraliza o placeholder e o texto digitado */
+        .ts-control input {
+          height: 48px !important;
+          line-height: 48px !important;      /* centraliza o placeholder */
+          padding: 0 !important;
+          margin: 0 !important;
+          font-size: 14px !important;
+        }
+      
+        /* Quando seleciona algo, o item também fica centralizado */
+        .ts-wrapper.single .ts-control .item {
+          line-height: 48px !important;
+        }
+      
+        /* Dropdown sempre por cima e com largura correta */
+        .ts-dropdown {
+          z-index: 99999 !important;
+          border-radius: 12px !important;
+          overflow: hidden;
+        }
+      
+        .ts-dropdown .ts-dropdown-content {
+          max-height: 320px;
+          overflow-y: auto;
+        }
+      
+        .ts-dropdown .option {
+          padding: 10px 14px;
+          white-space: normal; /* permite nomes grandes quebrar linha */
+        }
+      </style>
+      
+      
+
+</head>
+
+<body>
+    <%- include('../main_header') %>
+
+        <!-- Main Content -->
+        <main class="main-container">
+            <!-- Instructions Bar -->
+            <div id="instructions-bar" class="instructions-bar">
+                <button class="instructions-close" onclick="closeInstructions()">
+                    <i class="fas fa-times"></i>
+                </button>
+                <a href="#" id="instructions-link" class="instructions-link">
+                    <i class="fas fa-info-circle"></i>
+                    Clique aqui para ver as instruções
+                </a>
+            </div>
+
+            <!-- Form Card -->
+            <div class="form-card">
+                <form id="visit-form" method="POST">
+                    <div class="g-" data-sitekey="6LeqEu0qAAAAAKdMGHiUNNyEkAa-DvQqmOIoNkeR" style="display:none;">
+                    </div>
+
+                    <!-- Cards em Grid - 2 por linha -->
+                    <div class="cards-grid">
+                        <!-- Mês -->
+                        <div class="card-item">
+                            <div class="card-icon">
+                                <i class="fas fa-calendar"></i>
+                            </div>
+                            <div class="card-label">MÊS</div>
+                            <select class="card-select" style="color: gray" name="month" id="month" required>
+                                <option value="">Selecione o Mês</option>
+                                <option value="1">Janeiro</option>
+                                <option value="2">Fevereiro</option>
+                                <option value="3">Março</option>
+                                <option value="4">Abril</option>
+                                <option value="5">Maio</option>
+                                <option value="6">Junho</option>
+                                <option value="7">Julho</option>
+                                <option value="8">Agosto</option>
+                                <option value="9">Setembro</option>
+                                <option value="10">Outubro</option>
+                                <option value="11">Novembro</option>
+                                <option value="12">Dezembro</option>
+                            </select>
+                        </div>
+
+                        <!-- Município -->
+                        <div class="card-item">
+                            <div class="card-icon">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div class="card-label">MUNICÍPIO</div>
+                                <select class="card-select" style="color: gray" name="city_id" id="city_id" onchange="loadChurches()" required>
+                                <option value="">Selecione o Município</option>
+
+                                <% (cities || []).forEach((city) => { %>
+                                    <option value="<%= city.id %>"><%= city.name %></option>
+                                <% }) %>
+                                </select>
+                        </div>
+
+                        <!-- Casa de Oração -->
+                        <div class="card-item">
+                            <div class="card-icon">
+                                <i class="fas fa-university"></i>
+                            </div>
+                            <div class="card-label">CASA DE ORAÇÃO</div>
+                            <select class="card-select"style="color: gray" name="church" id="church" required>
+                                <option value="">Selecione a Casa de Oração</option>
+                                <% (churches || []).forEach((church) => { %>
+                                    <option value="<%= church.id %>"><%= church.name %></option>
+                                <% }) %>
+                            </select>
+                        </div>
+
+                        <!-- Visitas da Irmandade -->
+                        <div class="card-item">
+                            <div class="card-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="card-label">VISITAS DA IRMANDADE</div>
+                            <div class="quantity-input-container">
+                                <button type="button" class="quantity-btn minus-btn" onclick="decrementValue('gvi')">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <input class="card-input quantity-input" type="number" name="gvi" id="gvi"
+                                    placeholder="0" min="0" value="0" required>
+                                <button type="button" class="quantity-btn plus-btn" onclick="incrementValue('gvi')">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Visitas da Mocidade -->
+                        <div class="card-item">
+                            <div class="card-icon">
+                                <i class="fas fa-children"></i>
+                            </div>
+                            <div class="card-label">VISITAS DA MOCIDADE</div>
+                            <div class="quantity-input-container">
+                                <button type="button" class="quantity-btn minus-btn" onclick="decrementValue('gvm')">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <input class="card-input quantity-input" type="number" name="gvm" id="gvm"
+                                    placeholder="0" min="0" value="0" required>
+                                <button type="button" class="quantity-btn plus-btn" onclick="incrementValue('gvm')">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+      
+                        <!-- Reunião Familiar -->
+                        <div class="card-item">
+                            <div class="card-icon">
+                                <i class="fas fa-home"></i>
+                            </div>
+                            <div class="card-label">REUNIÃO<br> FAMILIAR</div>
+                            <div class="quantity-input-container">
+                                <button type="button" class="quantity-btn minus-btn" onclick="decrementValue('rf')">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <input class="card-input quantity-input" type="number" name="rf" id="rf" placeholder="0"
+                                    min="0" value="0" required>
+                                <button type="button" class="quantity-btn plus-btn" onclick="incrementValue('rf')">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Reunião de Evangelização -->
+                        <div class="card-item">
+                            <div class="card-icon">
+                                <i class="fas fa-book-open"></i>
+                            </div>
+                            <div class="card-label">REUNIÃO DE EVANGELIZAÇÃO</div>
+                            <div class="quantity-input-container">
+                                <button type="button" class="quantity-btn minus-btn" onclick="decrementValue('re')">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <input class="card-input quantity-input" type="number" name="re" id="re" placeholder="0"
+                                    min="0" value="0" required>
+                                <button type="button" class="quantity-btn plus-btn" onclick="incrementValue('re')">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn-primary-mobile">
+                        <i class="fas fa-paper-plane"></i>
+                        Enviar Lançamento
+                    </button>
+                </form>
+            </div>
+        </main>
+
+        <!-- Footer Menu Mobile para V2 -->
+        <footer class="footer-nav">
+            <div class="nav-container">
+                <a href="/privacidade" class="nav-item">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Privacidade</span>
+                </a>
+                <a href="/restrito/acesso" class="nav-item">
+                    <i class="fas fa-lock"></i>
+                    <span>Área Restrita</span>
+                </a>
+            </div>
+        </footer>
+
+        <!-- Scripts -->
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
+        <script>
+  // Função para carregar igrejas (evita quebrar a página)
+  function loadChurches() {
+    const citySelected = document.getElementById("city_id").value;
+
+    // Se você ainda não implementou a busca de igrejas, só retorna.
+    if (!citySelected) return;
+
+    // TODO: aqui você implementa o fetch depois:
+    // fetch(`/churches?city_id=${citySelected}`)
+    //   .then(r => r.json())
+    //   .then(data => ...)
+    //   .catch(console.error);
+  }
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const el = document.querySelector("#church");
+      if (!el) return;
+  
+      new TomSelect("#church", {
+        create: false,
+        hidePlaceholder: true,
+        placeholder: "Selecione a Casa de Oração",
+        closeAfterSelect: true,
+        maxOptions: 300,
+  
+        // 🔥 evita o dropdown ser cortado dentro do card
+        dropdownParent: "body",
+  
+        // busca pelo texto exibido
+        searchField: ["text"]
+      });
+    });
+  </script>
+  
+  
+  
+
+<script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
+
+</body>
+
+</html>

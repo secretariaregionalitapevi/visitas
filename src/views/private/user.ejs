@@ -1,0 +1,181 @@
+<section class="content-header">
+    <div class=" modern-table">
+        <table id="registrosTable2" class="table table-striped">
+
+            <tbody>
+                <tr>
+                    <td><strong>Usuário:</strong>
+                        <%= username %>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>E-mail:</strong>
+                        <%= email %>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Observação:</strong>
+                        <%= obs %>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="">
+                        <button id="changePasswordBtn" class="btn btn-primary w-50" data-toggle="modal"
+                            data-target="#changePasswordModal">
+                            <small>Alterar Senha</small>
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+
+
+
+
+    <div class="header-card mt-2">
+        <div class="header-card stats-card dashboard-header">
+            <div class="card-header-clean">
+                <div class="header-main">
+                    <div class="header-content">
+                        <h3 class="header-title mb-2"><i class="fa fa-map-marker-alt me-2"></i>Municípios</h3>
+                    </div>
+                </div>
+            </div>
+            <div class=" modern-table">
+                <table id="citiesTable" class="table table-striped table-bordered">
+                    <thead>
+                    </thead>
+                    <tbody>
+                        <% cities.forEach(record=> { %>
+                            <tr>
+                                <td>
+                                    <%= record.city %>
+                                </td>
+                            </tr>
+                            <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+<div class="header-card mt-2">
+    <div class="header-card stats-card dashboard-header">
+        <div class="card-header-clean">
+            <div class="header-main">
+                <div class="header-content">
+                    <h3 class="header-title mb-2"><i class="fa fa-university me-2"></i>Casas de oração</h3>
+                </div>
+            </div>
+        </div>
+        <div class="modern-table">
+            <table id="churchesTable" class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% churches.forEach(record=> { %>
+                        <tr>
+                            <td>
+                                <%= record.name %>
+                            </td>
+                        </tr>
+                        <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+</section>
+
+<script>
+    $(document).ready(function () {
+        $('#registrosTable').DataTable({
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json"
+            },
+            "pageLength": 5,  // Mostra 5 registros por página
+            "lengthMenu": [5, 10, 25, 50],  // Opções de registros por página
+            "order": [[0, "desc"]],  // Ordena pela primeira coluna (Mês)
+            "responsive": true,  // Responsividade automática
+
+            // Desabilita várias interações
+            "bFilter": false,   // Desabilita a busca/filtro
+            "bInfo": false,     // Desabilita a exibição de informações (ex: "Mostrando 1 a 5 de 50 registros")
+            "bPaginate": false, // Desabilita a paginação
+            "bSort": false,     // Desabilita a ordenação
+            "bLengthChange": false, // Desabilita a opção de alterar o número de registros por página
+            "bProcessing": true, // Exibe o "loading" enquanto a tabela carrega
+        });
+
+        $('#churchesTable').DataTable({
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json"
+            },
+            "pageLength": 25,  // Mostra 5 registros por página
+            "lengthMenu": [5, 10, 25, 50],  // Opções de registros por página
+            "order": [[0, "desc"]],  // Ordena pela primeira coluna (Mês)
+            "responsive": true,  // Responsividade automática
+
+
+        });
+    });
+
+</script>
+
+<script>
+    $('#changePasswordBtn').on('click', function () {
+        Swal.fire({
+            title: 'Alterar Senha',
+            html: `
+                <div class="form-group">
+                    <label for="newPassword">Nova Senha</label>
+                    <input type="password" id="newPassword" class="swal2-input" placeholder="Digite a nova senha" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Confirmar Senha</label>
+                    <input type="password" id="confirmPassword" class="swal2-input" placeholder="Confirme a nova senha" required>
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: 'Salvar',
+            cancelButtonText: 'Cancelar',
+            preConfirm: () => {
+                const newPassword = document.getElementById('newPassword').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+
+                if (newPassword !== confirmPassword) {
+                    Swal.showValidationMessage('As senhas não coincidem!');
+                    return false;
+                }
+                return { newPassword: newPassword, confirmPassword: confirmPassword };
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+
+                const newPassword = result.value.newPassword;
+                const confirmPassword = result.value.confirmPassword;
+
+                $.ajax({
+                    url: '/restrito/alterar-senha',
+                    type: 'POST',
+                    data: {
+                        confirmPassword: confirmPassword,
+                        newPassword: newPassword
+                    },
+                    success: function (response) {
+                        Swal.fire('Senha alterada!', 'Sua senha foi alterada com sucesso!', 'success');
+                    },
+                    error: function (xhr, status, error) {
+                        Swal.fire('Erro!', 'Houve um problema ao alterar a senha. Tente novamente.', 'error');
+                    }
+                });
+            }
+        });
+    });
+</script>

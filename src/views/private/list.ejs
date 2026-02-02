@@ -1,0 +1,503 @@
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
+
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+
+<style>
+/* Fix z-index para modais */
+.modal {
+    z-index: 1055 !important;
+}
+.modal-backdrop {
+    z-index: 1050 !important;
+}
+.modal-dialog {
+    z-index: 1056 !important;
+}
+</style>
+
+<!-- SEU FORMULÁRIO E TABELAS (mantém igual) -->
+<form id="searchByMonthAndCity" class="" method="POST" accept-charset="utf-8">
+    <div class="header-card dashboard-header">
+        <div class="dashboard-title-section">
+            <div class="title-wrapper">
+                <div class="title-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="title-content">
+                    <h2 class="dashboard-title">Consultas</h2>
+                    <p class="dashboard-subtitle">Análise completa de visitas com detalhes</p>
+                </div>
+            </div>
+    
+            <div class="filter-section">
+                <form id="search" method="POST" accept-charset="utf-8">
+                    <div class="filter-wrapper">
+                        <div class="select-wrapper">
+                            <select id="monthSelect" name="month" class="form-select mb-2">
+                                <option value=""> Selecione o mês</option>
+                                <option value=1>Janeiro</option>
+                                <option value=2>Fevereiro</option>
+                                <option value=3>Março</option>
+                                <option value=4>Abril</option>
+                                <option value=5>Maio</option>
+                                <option value=6>Junho</option>
+                                <option value=7>Julho</option>
+                                <option value=8>Agosto</option>
+                                <option value=9>Setembro</option>
+                                <option value=10>Outubro</option>
+                                <option value=11>Novembro</option>
+                                <option value=12>Dezembro</option>
+                            </select>
+                            <select id="citySelect" name="city" class="form-select w-100 mt-4">
+                                <option value="">Município</option>
+                                <% cities.forEach(city=> { %>
+                                    <option value="<%= city.city_id %>"><%= city.city %></option>
+                                    <% }) %>
+                            </select>
+                        </div>
+                        <button type="button" class="btn btn-primary search-btn" onclick="searchByMonthAndCity()">
+                            <i class="fas fa-search"></i>
+                            <span class="btn-text">Filtrar</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</form>
+
+<div id="tables-wrapper" style="display: none;">
+    <div class="header-card stats-card dashboard-header">
+        <div class="card-header-clean">
+            <div class="header-main">
+                <div class="header-content">
+                    <h3 class="header-title mb-2"><i class="fa fa-list-ul me-2"></i>Lançamentos</h3>
+                </div>
+            </div>
+        </div>
+        <section class="content-header">
+            <div class="table-responsive modern-table">
+                <table id="registrosTable" class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Mês</th>
+                            <th>Município</th>
+                            <th>Casa de Oração</th>
+                            <th>GVI</th>
+                            <th>GVM</th>
+                            <th>RF</th>
+                            <th>RE</th>
+                            <th>Total</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% records.forEach(record=> { %>
+                            <tr>
+                                <td class="centered-cell">
+                                    <div class="value-badge warning">
+                                        <%= record.month %>
+                                    </div>
+                                </td>
+                                <td class="centered-cell">
+                                    <div class="value-badge warning">
+                                        <%= record.city %>
+                                    </div>
+                                </td>
+                                <td class="centered-cell">
+                                    <div class="value-badge warning">
+                                        <%= record.church %>
+                                    </div>
+                                </td>
+                                <td class="centered-cell">
+                                    <div class="value-badge neutral">
+                                        <%=  record.gvi %>
+                                    </div>
+                                </td>
+                                <td class="centered-cell">
+                                    <div class="value-badge neutral">
+                                        <%=  record.gvm %>
+                                    </div>
+                                </td>
+                                <td class="centered-cell">
+                                    <div class="value-badge neutral">
+                                        <%=  record.rf %>
+                                    </div>
+                                </td>
+                                <td class="centered-cell">
+                                    <div class="value-badge neutral">
+                                        <%=  record.re %>
+                                    </div>
+                                </td>
+                                <td class="centered-cell">
+                                    <div class="value-badge success">
+                                        <%=  record.amount %>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <button class="btn btn-sm btn-primary me-1 btn-edit" data-id="<%= record.id %>">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger btn-delete" data-id="<%= record.id %>">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <div class="header-card mt-2" id="pendings">
+        <div class="header-card stats-card dashboard-header">
+            <div class="card-header-clean">
+                <div class="header-main">
+                    <div class="header-content">
+                        <h3 class="header-title mb-2"><i class="fa fa-exclamation-triangle me-2"></i>Pendentes (Mês anterior)</h3>
+                    </div>
+                </div>
+            </div>
+        <section class="content-header">
+            <div class="table-responsive modern-table">
+                <table id="registrosTable2" class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Município</th>
+                            <th>Casa de Oração</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% recordsPending.forEach(recordP=> { %>
+                            <tr>
+                                <td><%= recordP.city %></td>
+                                <td><%= recordP.church %></td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+</div>
+
+<!-- Modal de Edição (mantém igual) -->
+<div class="modal fade" id="editVisitModal" tabindex="-1" role="dialog" aria-labelledby="editVisitModalLabel">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editVisitModalLabel">Editar Lançamento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editVisitForm">
+                    <input type="hidden" id="editVisitId">
+                    
+                    <div class="alert alert-info mb-3 p-2 text-center">
+                        <small>
+                            <strong>Casa de Oração:</strong> <span id="editChurchName"></span>
+                            <span class="mx-2">|</span>
+                            <strong>Mês:</strong> <span id="editMonthName"></span>
+                        </small>
+                    </div>
+                    
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label for="editGvi" class="form-label small">GVI</label>
+                            <input type="number" class="form-control form-control-sm" id="editGvi" required>
+                        </div>
+                        <div class="col-6">
+                            <label for="editGvm" class="form-label small">GVM</label>
+                            <input type="number" class="form-control form-control-sm" id="editGvm" required>
+                        </div>
+                        <div class="col-6">
+                            <label for="editRf" class="form-label small">RF</label>
+                            <input type="number" class="form-control form-control-sm" id="editRf" required>
+                        </div>
+                        <div class="col-6">
+                            <label for="editRe" class="form-label small">RE</label>
+                            <input type="number" class="form-control form-control-sm" id="editRe" required>
+                        </div>
+                    </div>
+                </form>
+                
+                <div class="alert alert-warning mt-3 p-2" role="alert">
+                    <small class="d-flex align-items-center">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <span><strong>Atenção:</strong> Alterações são auditadas. Use com responsabilidade.</span>
+                        <button type="button" class="btn-close btn-close-sm ms-auto" data-bs-dismiss="alert"></button>
+                    </small>
+                </div>
+            </div>
+            
+            <div class="modal-footer justify-content-center py-2">
+                <button type="button" class="btn btn-secondary btn-sm me-2" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary btn-sm" onclick="saveVisit()">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Feedback -->
+<div class="modal fade" id="feedbackModal" tabindex="-1" role="dialog" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="feedbackModalTitle">Notificação</h5>
+            </div>
+            <div class="modal-body">
+                <div class="text-center">
+                    <div class="feedback-icon" id="feedbackIcon">
+                        <i class="fas fa-check-circle text-success"></i>
+                    </div>
+                    <div class="feedback-message" id="feedbackMessage">
+                        Operação realizada com sucesso!
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-primary" id="feedbackOkBtn" onclick="closeFeedbackModal()">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Se a URL tem #pendings, executa a busca automaticamente
+        if (window.location.hash === '#pendings') {
+            // Força execução da busca
+  
+            // Aguarda carregar e vai para a seção
+            setTimeout(function() {
+                const element = document.getElementById('pendings');
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth' });
+                }
+            }, 1000);
+        }
+    });
+    </script>
+
+
+<script>
+    $(document).ready(function () {
+        var readyCount = 0;
+        function checkReady() {
+            readyCount++;
+            if (readyCount === 2) {
+                $('#tables-loading').hide();
+                $('#tables-wrapper').show();
+            }
+        }
+
+        $('#registrosTable').DataTable({
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json"
+            },
+            pageLength: 10,
+            lengthMenu: [5, 10, 25, 50],
+            order: [[0, "desc"]],
+            responsive: true,
+            initComplete: checkReady
+        });
+
+        $('#registrosTable2').DataTable({
+            dom: 'Bfrtip',
+            buttons: ['copy', 'excel', 'pdf'],
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json"
+            },
+            pageLength: 10,
+            lengthMenu: [5, 10, 25, 50],
+            order: [[0, "desc"]],
+            responsive: true,
+            initComplete: checkReady
+        });
+
+        $(document).on('click', '.btn-edit', function (e) {
+            e.preventDefault();
+            const id = $(this).data('id');
+            editVisit(id);
+        });
+
+        $(document).on('click', '.btn-delete', function (e) {
+            e.preventDefault();
+            const id = $(this).data('id');
+            deleteVisit(id, this);
+        });
+    });
+
+    function searchByMonthAndCity() {
+        const selectedMonth = document.getElementById('monthSelect').value;
+        const selectedCity = document.getElementById('citySelect').value;
+
+        let url = '/restrito/visitas';
+        if (selectedMonth) {
+            url += '?month=' + selectedMonth;
+        }
+        if (selectedCity) {
+            url += (selectedMonth ? '&' : '?') + 'city_id=' + selectedCity;
+        }
+
+        window.location.href = url;
+    }
+
+    function showFeedbackModal(message, type = 'success', shouldReload = false) {
+        const modal = document.getElementById('feedbackModal');
+        const title = document.getElementById('feedbackModalTitle');
+        const icon = document.getElementById('feedbackIcon');
+        const messageEl = document.getElementById('feedbackMessage');
+        const okBtn = document.getElementById('feedbackOkBtn');
+        
+        if (type === 'success') {
+            title.textContent = 'Sucesso';
+            icon.innerHTML = '<i class="fas fa-check-circle text-success"></i>';
+            okBtn.className = 'btn btn-success';
+        } else {
+            title.textContent = 'Erro';
+            icon.innerHTML = '<i class="fas fa-exclamation-circle text-danger"></i>';
+            okBtn.className = 'btn btn-danger';
+        }
+        
+        messageEl.textContent = message;
+        
+        okBtn.onclick = function() {
+            closeFeedbackModal();
+            if (shouldReload) {
+                setTimeout(() => location.reload(), 300);
+            }
+        };
+        
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+    }
+
+    function closeFeedbackModal() {
+        const modal = bootstrap.Modal.getInstance(document.getElementById('feedbackModal'));
+        modal.hide();
+    }
+
+    function editVisit(id) {
+        fetch(`/restrito/visitas/${id}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                document.getElementById('editVisitId').value = data.id;
+                document.getElementById('editChurchName').textContent = data.church_name;
+                document.getElementById('editMonthName').textContent = data.month;
+                document.getElementById('editGvi').value = data.gvi;
+                document.getElementById('editGvm').value = data.gvm;
+                document.getElementById('editRf').value = data.rf;
+                document.getElementById('editRe').value = data.re;
+                
+                const modal = new bootstrap.Modal(document.getElementById('editVisitModal'));
+                modal.show();
+            })
+            .catch(error => {
+                console.error('Erro ao buscar dados:', error);
+                showFeedbackModal('Erro ao carregar dados do lançamento', 'error');
+            });
+    }
+
+    
+    function saveVisit() {
+        const id = document.getElementById('editVisitId').value;
+        const gvi = document.getElementById('editGvi').value;
+        const gvm = document.getElementById('editGvm').value;
+        const rf = document.getElementById('editRf').value;
+        const re = document.getElementById('editRe').value;
+
+        if (!gvi || !gvm || !rf || !re) {
+            showFeedbackModal('Todos os campos são obrigatórios', 'error');
+            return;
+        }
+
+        if (gvi < 0 || gvm < 0 || rf < 0 || re < 0) {
+            showFeedbackModal('Os valores não podem ser negativos', 'error');
+            return;
+        }
+
+        const data = { gvi, gvm, rf, re };
+
+        const saveButton = document.querySelector('#editVisitModal .btn-primary');
+        const originalText = saveButton.innerHTML;
+        saveButton.disabled = true;
+        saveButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Salvando...';
+
+        fetch(`/restrito/visitas/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            const editModal = bootstrap.Modal.getInstance(document.getElementById('editVisitModal'));
+            editModal.hide();
+            
+            if (data.success) {
+                showFeedbackModal('Lançamento atualizado com sucesso!', 'success', true);
+            } else {
+                showFeedbackModal(data.message || 'Erro ao salvar alterações', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            showFeedbackModal('Erro ao salvar alterações', 'error');
+        })
+        .finally(() => {
+            saveButton.disabled = false;
+            saveButton.innerHTML = originalText;
+        });
+    }
+
+    function deleteVisit(id, buttonEl) {
+        if (confirm('Tem certeza que deseja excluir este lançamento?')) {
+            const deleteButton = buttonEl || event.target.closest('button');
+            const originalText = deleteButton.innerHTML;
+            deleteButton.disabled = true;
+            deleteButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+
+            fetch(`/restrito/visitas/${id}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showFeedbackModal('Lançamento excluído com sucesso!', 'success', true);
+                } else {
+                    showFeedbackModal(data.message || 'Erro ao excluir lançamento', 'error');
+                    deleteButton.disabled = false;
+                    deleteButton.innerHTML = originalText;
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                showFeedbackModal('Erro ao excluir lançamento', 'error');
+                deleteButton.disabled = false;
+                deleteButton.innerHTML = originalText;
+            });
+        }
+    }
+
+    // Mover modais para body e aplicar z-index fix
+    document.addEventListener('DOMContentLoaded', function() {
+        const editModal = document.getElementById('editVisitModal');
+        const feedbackModal = document.getElementById('feedbackModal');
+        
+        if (editModal && editModal.parentElement !== document.body) {
+            document.body.appendChild(editModal);
+        }
+        
+        if (feedbackModal && feedbackModal.parentElement !== document.body) {
+            document.body.appendChild(feedbackModal);
+        }
+    });
+</script>

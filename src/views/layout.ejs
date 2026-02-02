@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.css">
+
+  <meta charset="UTF-8">
+  <title>Registro de Visitas</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  
+</head>
+
+<body>
+
+  <!-- HEADER GLOBAL (apenas um) -->
+ 
+
+  <!-- CONTEÚDO DAS PÁGINAS -->
+  <main>
+    <%- body %>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const el = document.querySelector("#church");
+      if (!el) return;
+  
+      new TomSelect("#church", {
+        create: false,
+        hidePlaceholder: true,
+        placeholder: "Selecione a Casa de Oração",
+        closeAfterSelect: true,
+        maxOptions: 300,
+  
+        // 🔥 evita o dropdown ser cortado dentro do card
+        dropdownParent: "body",
+  
+        // busca pelo texto exibido
+        searchField: ["text"]
+      });
+    });
+  </script>
+  
+
+</body>
+</html>

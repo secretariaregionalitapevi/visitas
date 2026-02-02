@@ -1,0 +1,310 @@
+<%
+  const roleSafe = (typeof role !== "undefined") ? role : "";
+  const activePageSafe = (typeof activePage !== "undefined") ? activePage : "";
+%>
+
+
+<style>
+    
+/* ===== MODERN FOOTER NAVIGATION ===== */
+.modern-footer-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: #ffffff;
+    border-top: 1px solid rgba(4, 61, 96, 0.08);
+    backdrop-filter: blur(20px);
+ transform: none;
+    transition: none;
+}
+
+.modern-footer-nav.footer-loaded {
+    transform: translateY(0);
+}
+
+.nav-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 249, 250, 0.98) 100%);
+    box-shadow: 
+        0 -8px 32px rgba(4, 61, 96, 0.08),
+        0 -4px 16px rgba(4, 61, 96, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.nav-container {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 8px 16px 12px;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+/* Nav Items - Mobile First */
+.nav-item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: #6c757d;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 8px 12px;
+    border-radius: 16px;
+    min-width: 64px;
+    cursor: pointer;
+    overflow: hidden;
+    transform: translateY(20px);
+    opacity: 0;
+    animation: slideUp 0.6s ease forwards;
+}
+
+@keyframes slideUp {
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.nav-icon-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    background: transparent;
+}
+
+.nav-icon-wrapper i {
+    font-size: 22px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    color: inherit;
+}
+
+.nav-label {
+    font-size: 11px;
+    font-weight: 500;
+    margin-top: 4px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0.8;
+    letter-spacing: 0.2px;
+}
+
+/* Active Indicator */
+.active-indicator {
+    position: absolute;
+    top: -2px;
+    left: 50%;
+    transform: translateX(-50%) scaleX(0);
+    width: 24px;
+    height: 3px;
+    background: linear-gradient(90deg, #043d60, #0a5a8a);
+    border-radius: 0 0 3px 3px;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Ripple Effect */
+.nav-ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(4, 61, 96, 0.1);
+    transform: scale(0);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.nav-ripple.ripple-animation {
+    animation: ripple 0.6s ease-out;
+}
+
+@keyframes ripple {
+    to {
+        transform: scale(2);
+        opacity: 0;
+    }
+}
+
+/* Hover States */
+.nav-item:hover {
+    color: #043d60;
+    transform: translateY(-2px);
+}
+
+.nav-item:hover .nav-icon-wrapper {
+    background: rgba(4, 61, 96, 0.08);
+    transform: scale(1.05);
+}
+
+.nav-item:hover .nav-label {
+    opacity: 1;
+    font-weight: 600;
+}
+
+/* Active State */
+.nav-item.active {
+    color: #ffffff;
+}
+
+.nav-item.active .nav-icon-wrapper {
+    background: linear-gradient(135deg, #043d60 0%, #0a5a8a 100%);
+    box-shadow: 
+        0 4px 16px rgba(4, 61, 96, 0.3),
+        0 2px 8px rgba(4, 61, 96, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+.nav-item.active .nav-icon-wrapper i {
+    color: #ffffff;
+}
+
+.nav-item.active .nav-label {
+    color: #043d60;
+    font-weight: 700;
+    opacity: 1;
+}
+/* Pressed State (Touch) */
+.nav-item.nav-pressed {
+    transform: scale(0.95) translateY(-1px);
+}
+
+.nav-item.nav-pressed .nav-icon-wrapper {
+    transform: scale(0.9);
+}
+
+</style>
+
+<!-- Footer Navigation - Mobile First Design -->
+<footer class="modern-footer-nav">
+    <div class="nav-background"></div>
+    <div class="nav-container">
+        <a href="/restrito/graficos" class="nav-item <%= activePageSafe === 'chart' ? 'active' : '' %>">
+            <div class="nav-icon-wrapper">
+                <i class="fas fa-chart-line"></i>
+                <div class="active-indicator"></div>
+            </div>
+            <span class="nav-label">Gráficos</span>
+            <div class="nav-ripple"></div>
+        </a>
+        
+        <a href="/restrito/visitas" class="nav-item <%= activePageSafe === 'list' ? 'active' : '' %>">
+
+
+            <div class="nav-icon-wrapper">
+                <i class="fas fa-list-ul"></i>
+                <div class="active-indicator"></div>
+            </div>
+            <span class="nav-label">Listagem</span>
+            <div class="nav-ripple"></div>
+        </a>
+        
+        <a href="/restrito/relatorios" class="nav-item <%= activePageSafe === 'report' ? 'active' : '' %>">
+            <div class="nav-icon-wrapper">
+                <i class="fas fa-file-alt"></i>
+                <div class="active-indicator"></div>
+            </div>
+            <span class="nav-label">Relatórios</span>
+            <div class="nav-ripple"></div>
+        </a>
+        
+        <a href="/restrito/usuario" class="nav-item <%= activePageSafe === 'user' ? 'active' : '' %>">
+            <div class="nav-icon-wrapper">
+                <i class="fas fa-user-circle"></i>
+                <div class="active-indicator"></div>
+            </div>
+            <span class="nav-label">Perfil</span>
+            <div class="nav-ripple"></div>
+        </a>
+
+        <% if (roleSafe === 'admin') { %>
+            <a href="/restrito/admin/users" class="nav-item <%= activePageSafe === 'admin' ? 'active' : '' %>">
+                <div class="nav-icon-wrapper">
+                    <i class="fas fa-users-cog"></i>
+                    <div class="active-indicator"></div>
+                </div>
+                <span class="nav-label">Admin</span>
+                <div class="nav-ripple"></div>
+            </a>
+        <% } %>
+        <a href="/restrito/acesso" class="nav-item <%= activePageSafe === 'logout' ? 'active' : '' %>">
+            <div class="nav-icon-wrapper">
+                <i class="fas fa-sign-out-alt"></i>
+                <div class="active-indicator"></div>
+            </div>
+            <span class="nav-label">Sair</span>
+            <div class="nav-ripple"></div>
+        </a>
+    </div>
+</footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const navItems = document.querySelectorAll('.nav-item');
+    const currentPath = window.location.pathname;
+    
+    // Função para criar efeito ripple
+    function createRipple(event, element) {
+        const ripple = element.querySelector('.nav-ripple');
+        const rect = element.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const x = event.clientX - rect.left - size / 2;
+        const y = event.clientY - rect.top - size / 2;
+        
+        ripple.style.width = ripple.style.height = size + 'px';
+        ripple.style.left = x + 'px';
+        ripple.style.top = y + 'px';
+        
+        ripple.classList.remove('ripple-animation');
+        setTimeout(() => ripple.classList.add('ripple-animation'), 10);
+    }
+    
+    // Adicionar efeitos de interação
+    navItems.forEach((item, index) => {
+        const itemHref = item.getAttribute('href');
+        
+        // Verificar página ativa
+        if (itemHref === currentPath || 
+            (currentPath.includes('/restrito/graficos') && itemHref === '/restrito/graficos') ||
+            (currentPath.includes('/restrito/visitas') && itemHref === '/restrito/visitas') ||
+            (currentPath.includes('/restrito/relatorios') && itemHref === '/restrito/relatorios') ||
+            (currentPath.includes('/restrito/usuario') && itemHref === '/restrito/usuario') ||
+            (currentPath.includes('/restrito/admin') && itemHref === '/restrito/admin/users')) {
+            item.classList.add('active');
+        }
+        
+        // Adicionar delay na animação de entrada
+        item.style.animationDelay = `${index * 100}ms`;
+        
+        // Efeito ripple no clique
+        item.addEventListener('click', function(e) {
+            createRipple(e, this);
+        });
+        
+        // Feedback tátil no toque (mobile)
+        item.addEventListener('touchstart', function(e) {
+            this.classList.add('nav-pressed');
+            if (navigator.vibrate) {
+                navigator.vibrate(10); // Vibração sutil
+            }
+        });
+        
+        item.addEventListener('touchend', function() {
+            setTimeout(() => {
+                this.classList.remove('nav-pressed');
+            }, 150);
+        });
+    });
+    
+});
+</script> 

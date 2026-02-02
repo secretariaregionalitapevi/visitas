@@ -1,0 +1,57 @@
+<div class="header-card">
+  <div class="card-header">
+    <h3 class="card-title my-2 mx-2">Criar Novo Usuário</h3>
+  </div>
+  <div class="card-body">
+    <form action="/restrito/admin/users/create" method="POST" id="createUserForm">
+      <div class="mb-3">
+        <label for="name" class="form-label">Nome</label>
+        <input type="text" class="form-control" id="name" name="name" required>
+      </div>
+      <div class="mb-3">
+        <label for="email" class="form-label">Email</label>
+        <input type="email" class="form-control" id="email" name="email" required>
+      </div>
+      <div class="mb-3">
+        <label for="password" class="form-label">Senha</label>
+        <input type="password" class="form-control" id="password" name="password" required>
+      </div>
+      <div class="mb-3">
+        <label for="role" class="form-label">Função</label>
+        <select class="form-select" id="role" name="role" required>
+          <option value="">Selecione uma função</option>
+          <option value="user">Usuário</option>
+          <option value="admin">Administrador</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Municípios</label>
+        <div class="border rounded p-3">
+          <div class="row"><% cities.forEach(city=> { %> <div class="col-md-4 mb-2">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="cities" value="<%= city.id %>" id="city<%= city.id %>">
+                <label class="form-check-label" for="city<%= city.id %>"><%= city.name %> </label>
+              </div>
+            </div><% }); %> </div>
+        </div>
+      </div>
+      <div class="d-flex justify-content-between">
+        <a href="/restrito/admin/users" class="btn btn-danger">Cancelar</a>
+        <button type="button" class="btn bg-dark-blue text-white" id="submitUserBtn">Criar Usuário</button>
+      </div>
+    </form>
+  </div>
+</div>
+<script>
+  document.getElementById('submitUserBtn').addEventListener('click', function() {
+    const form = document.getElementById('createUserForm');
+    const password = document.getElementById('password').value;
+    
+    if (password.length < 6) {
+      alert('A senha deve ter pelo menos 6 caracteres');
+      return;
+    }
+
+    form.submit();
+  });
+</script>
