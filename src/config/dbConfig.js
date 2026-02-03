@@ -5,9 +5,25 @@ const { Pool } = require('pg');
 const connectionString = process.env.DATABASE_URL || 
     `postgresql://${process.env.DB_USER || 'postgres'}:${process.env.DB_PASSWORD || ''}@${process.env.DB_HOST || 'localhost'}:${process.env.DB_PORT || 5432}/${process.env.DB_NAME || 'postgres'}`;
 
-// Detecta se é Supabase (contém 'supabase.co' na URL) e habilita SSL automaticamente
-const isSupabase = connectionString.includes('supabase.co');
+// Detecta se é Supabase e habilita SSL automaticamente
+const isSupabase =
+    connectionString.includes('supabase.co') ||
+    connectionString.includes('supabase.com') ||
+    connectionString.includes('pooler.supabase');
 const sslEnabled = process.env.DB_SSL === 'true' || isSupabase;
+
+// Log seguro do destino de conexão (sem usuário/senha)
+try {
+    const safeUrl = new URL(connectionString);
+    console.log('DB target:', {
+        host: safeUrl.hostname,
+        port: safeUrl.port || undefined,
+        database: safeUrl.pathname ? safeUrl.pathname.replace('/', '') : undefined,
+        ssl: sslEnabled
+    });
+} catch (e) {
+    console.log('DB target: unable to parse DATABASE_URL');
+}
 
 const pool = new Pool({
     connectionString: connectionString,
