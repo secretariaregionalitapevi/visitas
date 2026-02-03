@@ -133,4 +133,8 @@ function startServer(port, remainingRetries) {
   });
 }
 
-startServer(startingPort, maxRetries);
+if (require.main === module) {
+  startServer(startingPort, maxRetries);
+}
+
+module.exports = app;
