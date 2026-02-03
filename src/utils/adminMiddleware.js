@@ -1,7 +1,14 @@
 
+const { isAdminRole } = require('./roleUtils');
+
 function isAdmin(req, res, next) {
-    if (!req.session.isLoggedIn || req.session.role !== 'admin') {
-        console.log(`Tentativa de acesso não autorizado à rota administrativa por ${req.session.email || 'usuário não autenticado'}`);
+    if (!req.session.isLoggedIn) {
+        // Not authenticated: store return url and redirect to login
+        req.session.returnTo = req.originalUrl || '/';
+        return res.redirect('/restrito/acesso');
+    }
+
+    if (!isAdminRole(req.session.role)) {
         return res.status(403).render('error', { 
             layout: false, 
             type: 'danger', 

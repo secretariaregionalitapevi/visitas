@@ -2,7 +2,7 @@
 async function getChurches(app) {
 
   try {
-    const query = `SELECT c.id, c.name, ci.id as city_id, ci.name as city FROM churches c
+    const query = `SELECT c.id, c."COMUM" AS name, ci.id as city_id, ci.name as city FROM churches c
       INNER JOIN cities ci ON ci.id = c.city_id
       WHERE ci.id NOT IN(1,2,7)
       ORDER BY ci.name, c.id ASC;`;
@@ -35,7 +35,7 @@ async function getChurchesByUser(app, userId) {
 
     // PostgreSQL: usa ANY(array) ao invés de IN (?)
     const churchQuery = `
-      SELECT c.id, c.name, ci.id as city_id, ci.name as city
+      SELECT c.id, c."COMUM" AS name, ci.id as city_id, ci.name as city
       FROM churches c
       INNER JOIN cities ci ON ci.id = c.city_id
       WHERE ci.id = ANY($1::int[]) 

@@ -1,23 +1,22 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-<head>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.css">
+<%- include('head') %>
 
-  <meta charset="UTF-8">
-  <title>Registro de Visitas</title>
-  <link rel="stylesheet" href="/static/css/style.css">
-  
-</head>
-
-<body>
+<body class="<%= isAuthenticated ? 'private-body' : '' %>">
 
   <!-- HEADER GLOBAL (apenas um) -->
- 
+  <% if (isAuthenticated) { %>
+    <%- include('main_header') %>
+  <% } %>
 
   <!-- CONTEÚDO DAS PÁGINAS -->
-  <main>
+  <main class="<%= isAuthenticated ? 'main-content' : '' %>">
     <%- body %>
   </main>
+
+  <% if (isAuthenticated) { %>
+    <%- include('footer') %>
+  <% } %>
   <script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
   <script>
     document.addEventListener("DOMContentLoaded", () => {
@@ -31,7 +30,7 @@
         closeAfterSelect: true,
         maxOptions: 300,
   
-        // 🔥 evita o dropdown ser cortado dentro do card
+        // evita o dropdown ser cortado dentro do card
         dropdownParent: "body",
   
         // busca pelo texto exibido

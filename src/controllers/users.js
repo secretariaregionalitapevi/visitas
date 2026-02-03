@@ -58,12 +58,23 @@ async function appUserInfo(req, res) {
 
             const churches = await churchesService.getChurchesByUser(req.app, req.session.userId)
 
-            res.render('private/user', { activePage: 'user', churches: churches, obs:req.session.obs, username: req.session.username, cities: req.session.cities, email: req.session.email, last_login: req.session.last_login, role: req.session.role });
+            res.render('private/user', { 
+                activePage: 'user',
+                churches: churches,
+                obs: req.session.obs,
+                username: req.session.username,
+                cities: Array.isArray(req.session.cities) ? req.session.cities : [],
+                email: req.session.email,
+                last_login: req.session.last_login,
+                role: req.session.role
+            });
         } catch (err) {
             console.error('Erro ao buscar registros:', err);
             res.status(500).render('error', { layout: false, type: 'danger', message: "Erro ao buscar os registros. Tente novamente mais tarde.", role: req.session.role });
         }
     } else {
+        // Save originally requested url so we can return after login
+        req.session.returnTo = req.originalUrl || '/';
         res.redirect('/restrito/acesso');
     }
 }

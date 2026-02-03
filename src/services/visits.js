@@ -1,6 +1,18 @@
 const UAParser = require('ua-parser-js');
 const parser = new UAParser();
 
+async function userHasAssignments(app, userId) {
+  try {
+    const [rows] = await app.connection.query('SELECT 1 FROM user_cities WHERE user_id = $1 LIMIT 1', [userId]);
+    if (rows && rows.length) return true;
+    const [rows2] = await app.connection.query('SELECT 1 FROM user_churches WHERE user_id = $1 LIMIT 1', [userId]);
+    return !!(rows2 && rows2.length);
+  } catch (err) {
+    console.error('Erro verificando assignments do usuário:', err);
+    return false;
+  }
+}
+
 async function registerVisit(app, object) {
   const { month, city, church, gvi, gvm, rf, re, ip, os, browser } = object;
 
@@ -18,6 +30,7 @@ async function registerVisit(app, object) {
     if (!insertResults || insertResults.length === 0) {
       throw new Error('Failed to insert visit record')
     }
+    return insertResults[0];
   } catch (err) {
     console.error(err);
     throw err
@@ -84,9 +97,9 @@ async function chartsVisitsTypeByUser(app, userId, month) {
             COALESCE(SUM(v.rf), 0) AS total_rf,
             COALESCE(SUM(v.re), 0) AS total_re
         FROM 
-            cities c
+          cities c
         LEFT JOIN 
-            churches ch ON ch.city_id = c.id
+          churches ch ON TRIM(UPPER(ch."CIDADE")) = TRIM(UPPER(c.name))
         LEFT JOIN 
             visits v ON v.church_id = ch.id AND (v.month = $1 OR $1 IS NULL)
         INNER JOIN 
@@ -118,7 +131,7 @@ async function listChurchesWithoutRecordLastTwoMonths(app, userId) {
     let query =
       `SELECT ch.*, c.name AS city
         FROM churches ch
-        LEFT JOIN cities c ON ch.city_id = c.id
+        LEFT JOIN cities c ON TRIM(UPPER(c.name)) = TRIM(UPPER(ch."CIDADE"))
         LEFT JOIN visits v ON v.church_id = ch.id 
           AND v.month >= $1
         LEFT JOIN user_cities uc_city ON uc_city.user_id = $2 AND uc_city.city_id = c.id
@@ -138,10 +151,10 @@ async function listChurchesWithoutRecordLastTwoMonths(app, userId) {
 
 async function listVisitsByUser(app, userId, city_id = null, month = null) {
   let query = `
-     SELECT 
+      SELECT 
         v.*, 
         c.name AS city, 
-        ch.name AS church, 
+        ch."COMUM" AS church, 
         CASE
             WHEN v.month = 1 THEN 'Janeiro'
             WHEN v.month = 2 THEN 'Fevereiro'
@@ -158,13 +171,20 @@ async function listVisitsByUser(app, userId, city_id = null, month = null) {
         END AS month
     FROM visits v
     INNER JOIN churches ch ON v.church_id = ch.id
-    LEFT JOIN cities c ON ch.city_id = c.id
+    LEFT JOIN cities c ON TRIM(UPPER(c.name)) = TRIM(UPPER(ch."CIDADE"))
     LEFT JOIN user_cities uc_city ON uc_city.user_id = $1 AND uc_city.city_id = c.id
     LEFT JOIN user_churches uc_church ON uc_church.user_id = $2 AND uc_church.church_id = ch.id
     WHERE (uc_city.user_id IS NOT NULL OR uc_church.user_id IS NOT NULL)`;
 
-  const params = [userId, userId];  
-  let paramIndex = 3;
+  // Detecta se o usuário tem assignments; se não tiver, mostramos todos (fallback)
+  const hasAssign = await userHasAssignments(app, userId);
+  let params = [];
+  let paramIndex = 1;
+  if (hasAssign) {
+    params = [userId, userId];
+    paramIndex = 3;
+  }
+
   if (city_id !== null) {
     query += ` AND c.id = $${paramIndex}`;
     params.push(city_id);
@@ -183,111 +203,167 @@ async function listVisitsByUser(app, userId, city_id = null, month = null) {
   return results;
 }
 async function listGroupedVisits(app, userId, city_id = null, month = null) {
-  let query = '';
-  let params = []
-  if (city_id === null) {
-    params = [userId, userId];
+  // Implementação simplificada e segura para evitar sintaxe inválida
+  const hasAssign = await userHasAssignments(app, userId);
+  // Se foi passado city_id, retornar lançamentos por igreja (com month e church)
+  if (city_id !== null) {
+    const params = [];
+    let assignJoins = '';
+    const whereClauses = [];
 
-    query = `
-      SELECT 
-        COALESCE(c.name, 'Total') AS city,
-        SUM(v.gvi) AS gvi,
-        SUM(v.gvm) AS gvm,
-        SUM(v.rf) AS rf,
-        SUM(v.re) AS re,
-        (SUM(v.gvi) + SUM(v.gvm) + SUM(v.rf) + SUM(v.re)) AS amount
-      FROM visits v
-      INNER JOIN churches ch ON v.church_id = ch.id
-      LEFT JOIN cities c ON ch.city_id = c.id
-      LEFT JOIN user_cities uc_city ON uc_city.user_id = $1 AND uc_city.city_id = c.id
-      LEFT JOIN user_churches uc_church ON uc_church.user_id = $2 AND uc_church.church_id = ch.id
-      WHERE (uc_city.user_id IS NOT NULL OR uc_church.user_id IS NOT NULL)
-    `;
-
-    if (month !== null) {
-      query += ' AND v.month = $3';
-      params.push(month);
+    if (hasAssign) {
+      assignJoins = `
+        LEFT JOIN user_cities uc_city ON uc_city.user_id = $1 AND uc_city.city_id = c.id
+        LEFT JOIN user_churches uc_church ON uc_church.user_id = $1 AND uc_church.church_id = ch.id
+      `;
+      params.push(userId);
+      whereClauses.push('(uc_city.user_id IS NOT NULL OR uc_church.user_id IS NOT NULL)');
     }
 
-    // PostgreSQL: GROUPING SETS ao invés de WITH ROLLUP
-    query += ` GROUP BY GROUPING SETS ((c.name), ()) ORDER BY city NULLS LAST`;
+    params.push(city_id);
+    whereClauses.push(`c.id = $${params.length}`);
 
-  } else {
-    query = `
-    SELECT 
-      ch.name AS church,
-      c.name AS city,
-      COALESCE(SUM(v.gvi), 0) AS gvi,
-      COALESCE(SUM(v.gvm), 0) AS gvm,
-      COALESCE(SUM(v.rf), 0) AS rf,
-      COALESCE(SUM(v.re), 0) AS re,
-      COALESCE(SUM(v.gvi) + SUM(v.gvm) + SUM(v.rf) + SUM(v.re), 0) AS amount
-    FROM churches ch
-    LEFT JOIN cities c ON ch.city_id = c.id
-    LEFT JOIN visits v ON v.church_id = ch.id  AND v.month = $1
-    LEFT JOIN user_cities uc_city ON uc_city.user_id = $2 AND uc_city.city_id = c.id
-    LEFT JOIN user_churches uc_church ON uc_church.user_id = $3 AND uc_church.church_id = ch.id
-    WHERE c.id = $4
-      AND (uc_city.user_id IS NOT NULL OR uc_church.user_id IS NOT NULL)
-  `;
-  params = [month, userId, userId, city_id];
+    if (month !== null) {
+      params.push(month);
+      whereClauses.push(`v.month = $${params.length}`);
+    }
 
-  // PostgreSQL: GROUPING SETS ao invés de WITH ROLLUP
-  query += ` GROUP BY GROUPING SETS ((ch.name), ()) ORDER BY church NULLS LAST`;
- 
-  }
-  const [results] = await app.connection.query(query, params);
-  return results;
-}  
+    const whereSQL = whereClauses.length ? `WHERE ${whereClauses.join(' AND ')}` : '';
 
-
-async function listVisitsPendingByUser(app, userId, city_id = null, month = null) {
-  // Se nenhum mês for especificado, usa o mês anterior
-  const currentDate = new Date();
-  const currentMonth = month || (currentDate.getMonth() === 0 ? 12 : currentDate.getMonth());
-
-  let query = `
-      SELECT 
-          c.name AS city, 
-        ch.name AS church, 
-          COALESCE(
-              CASE
-                  WHEN v.month = 1 THEN 'Janeiro'
-                  WHEN v.month = 2 THEN 'Fevereiro'
-                  WHEN v.month = 3 THEN 'Março'
-                  WHEN v.month = 4 THEN 'Abril'
-                  WHEN v.month = 5 THEN 'Maio'
-                  WHEN v.month = 6 THEN 'Junho'
-                  WHEN v.month = 7 THEN 'Julho'
-                  WHEN v.month = 8 THEN 'Agosto'
-                  WHEN v.month = 9 THEN 'Setembro'
-                  WHEN v.month = 10 THEN 'Outubro'
-                  WHEN v.month = 11 THEN 'Novembro'
-                  WHEN v.month = 12 THEN 'Dezembro'
-              END,
-              'Sem lançamento'
-          ) AS month
-      FROM churches ch
-      LEFT JOIN cities c ON ch.city_id = c.id
-      LEFT JOIN visits v ON v.church_id = ch.id AND v.month = $1
-      LEFT JOIN user_cities uc_city ON uc_city.user_id = $2 AND uc_city.city_id = c.id
-      LEFT JOIN user_churches uc_church ON uc_church.user_id = $3 AND uc_church.church_id = ch.id
-      WHERE (uc_city.user_id IS NOT NULL OR uc_church.user_id IS NOT NULL) 
+    const query = `
+      SELECT v.id, v.month, c.name AS city, ch."COMUM" AS church,
+             COALESCE(v.gvi,0) AS gvi, COALESCE(v.gvm,0) AS gvm, COALESCE(v.rf,0) AS rf, COALESCE(v.re,0) AS re,
+             (COALESCE(v.gvi,0)+COALESCE(v.gvm,0)+COALESCE(v.rf,0)+COALESCE(v.re,0)) AS amount
+      FROM visits v
+      INNER JOIN churches ch ON v.church_id = ch.id
+      LEFT JOIN cities c ON TRIM(UPPER(c.name)) = TRIM(UPPER(ch."CIDADE"))
+      ${assignJoins}
+      ${whereSQL}
+      ORDER BY ch."COMUM" ASC;
     `;
 
-  const params = [currentMonth, userId, userId];  
-  let paramIndex = 4;
+    const [results] = await app.connection.query(query, params);
+    return results;
+  }
+  let params = [];
+  let assignJoins = '';
+  const whereClauses = [];
 
-  if (city_id !== null) {
-    query += ` AND c.id = $${paramIndex}`;
-    params.push(city_id);
-    paramIndex++;
+  if (hasAssign) {
+    assignJoins = `
+      LEFT JOIN user_cities uc_city ON uc_city.user_id = $1 AND uc_city.city_id = c.id
+      LEFT JOIN user_churches uc_church ON uc_church.user_id = $2 AND uc_church.church_id = ch.id
+    `;
+    params.push(userId, userId);
+    whereClauses.push('(uc_city.user_id IS NOT NULL OR uc_church.user_id IS NOT NULL)');
   }
 
-  query += '  AND v.id IS NULL ORDER BY ch.name ASC;'; 
+  if (city_id !== null) {
+    params.push(city_id);
+    whereClauses.push(`c.id = $${params.length}`);
+  }
 
-  const [results] = await app.connection.query(query, params);
+  if (month !== null) {
+    params.push(month);
+    whereClauses.push(`v.month = $${params.length}`);
+  }
+
+  const whereSQL = whereClauses.length ? `WHERE ${whereClauses.join(' AND ')}` : '';
+
+  const perCityQuery = `
+    SELECT COALESCE(c.name, '') AS city,
+           COALESCE(SUM(v.gvi),0) AS gvi,
+           COALESCE(SUM(v.gvm),0) AS gvm,
+           COALESCE(SUM(v.rf),0) AS rf,
+           COALESCE(SUM(v.re),0) AS re,
+           COALESCE(SUM(v.gvi)+SUM(v.gvm)+SUM(v.rf)+SUM(v.re),0) AS amount
+    FROM visits v
+    INNER JOIN churches ch ON v.church_id = ch.id
+    LEFT JOIN cities c ON TRIM(UPPER(c.name)) = TRIM(UPPER(ch."CIDADE"))
+    ${assignJoins}
+    ${whereSQL}
+    GROUP BY c.name
+  `;
+
+  const totalQuery = `
+    SELECT 'Total' AS city,
+           COALESCE(SUM(v.gvi),0) AS gvi,
+           COALESCE(SUM(v.gvm),0) AS gvm,
+           COALESCE(SUM(v.rf),0) AS rf,
+           COALESCE(SUM(v.re),0) AS re,
+           COALESCE(SUM(v.gvi)+SUM(v.gvm)+SUM(v.rf)+SUM(v.re),0) AS amount
+    FROM visits v
+    INNER JOIN churches ch ON v.church_id = ch.id
+    LEFT JOIN cities c ON TRIM(UPPER(c.name)) = TRIM(UPPER(ch."CIDADE"))
+    ${assignJoins}
+    ${whereSQL}
+  `;
+
+  const finalQuery = perCityQuery + '\nUNION ALL\n' + totalQuery + '\nORDER BY city NULLS LAST';
+
+  const [results] = await app.connection.query(finalQuery, params);
   return results;
+}
+
+/**
+ * Lista casas de oração pendentes (sem lançamento) para o mês anterior
+ * Retorna objetos com { city, church }
+ */
+async function listVisitsPendingByUser(app, userId, city_id = null, month = null) {
+  try {
+    // determina mês alvo: se mês informado, usa mês-1; senão mês anterior ao atual
+    let targetMonth;
+    if (month !== null && typeof month === 'number') {
+      targetMonth = month - 1;
+      if (targetMonth <= 0) targetMonth += 12;
+    } else {
+      const d = new Date();
+      targetMonth = d.getMonth(); // já retorna 0-11, queremos 1-12
+      if (targetMonth === 0) targetMonth = 12;
+    }
+
+    const hasAssign = await userHasAssignments(app, userId);
+    const params = [];
+    let assignJoins = '';
+    const whereClauses = [];
+
+    if (hasAssign) {
+      assignJoins = `
+        LEFT JOIN user_cities uc_city ON uc_city.user_id = $1 AND uc_city.city_id = c.id
+        LEFT JOIN user_churches uc_church ON uc_church.user_id = $1 AND uc_church.church_id = ch.id
+      `;
+      params.push(userId);
+      whereClauses.push('(uc_city.user_id IS NOT NULL OR uc_church.user_id IS NOT NULL)');
+    }
+
+    if (city_id !== null) {
+      params.push(city_id);
+      whereClauses.push(`c.id = $${params.length}`);
+    }
+
+    // targetMonth param
+    params.push(targetMonth);
+    whereClauses.push(`v.month = $${params.length}`);
+
+    const whereSQL = whereClauses.length ? `WHERE ${whereClauses.join(' AND ')}` : '';
+
+    const query = `
+      SELECT c.name AS city, ch."COMUM" AS church
+      FROM churches ch
+      LEFT JOIN cities c ON TRIM(UPPER(c.name)) = TRIM(UPPER(ch."CIDADE"))
+      LEFT JOIN visits v ON v.church_id = ch.id AND v.month = $${params.length}
+      ${assignJoins}
+      ${whereSQL}
+      AND v.id IS NULL
+      ORDER BY c.name, ch."COMUM";
+    `;
+
+    const [results] = await app.connection.query(query, params);
+    return results;
+  } catch (err) {
+    console.error('Erro ao buscar pendentes:', err);
+    return [];
+  }
 }
 
 
@@ -301,7 +377,7 @@ async function getHousesOfPrayerStats(app, userId, month) {
         ROUND((COUNT(DISTINCT CASE WHEN v.id IS NOT NULL THEN ch.id END)::numeric / NULLIF(COUNT(DISTINCT ch.id), 0)) * 100, 2) AS fill_percentage
       FROM cities c
       INNER JOIN user_cities uc ON uc.city_id = c.id
-      LEFT JOIN churches ch ON ch.city_id = c.id
+      LEFT JOIN churches ch ON TRIM(UPPER(ch."CIDADE")) = TRIM(UPPER(c.name))
       LEFT JOIN visits v ON v.church_id = ch.id AND v.month = $1
       WHERE uc.user_id = $2
       GROUP BY c.name
@@ -318,7 +394,7 @@ async function getHousesOfPrayerStats(app, userId, month) {
 
 async function getVisitById(app, id) {
     const query = `
-        SELECT v.*, ch.id as church_id, ch.name as church_name
+        SELECT v.*, ch.id as church_id, ch."COMUM" as church_name
         FROM visits v
         INNER JOIN churches ch ON v.church_id = ch.id
         WHERE v.id = $1
@@ -427,20 +503,35 @@ async function logVisitAction(app, visitId, userId, action) {
  */
 async function getBarChartDataByMunicipality(app, userId, month) {
   try {
-      const query = `
-          SELECT 
-              ci.name AS label,
-              SUM(v.gvi + v.gvm + v.rf + v.re) AS total
-          FROM cities ci
-          INNER JOIN user_cities uc ON uc.city_id = ci.id
-          LEFT JOIN churches ch ON ch.city_id = ci.id
-          LEFT JOIN visits v ON v.church_id = ch.id AND v.month = $1
-          WHERE uc.user_id = $2
-          GROUP BY ci.id, ci.name
-          ORDER BY total DESC
-      `;
-      const [results] = await app.connection.query(query, [month, userId]);
-      return results;
+    const hasAssign = await userHasAssignments(app, userId);
+    if (hasAssign) {
+    const query = `
+      SELECT 
+        ci.name AS label,
+        COALESCE(SUM(v.gvi + v.gvm + v.rf + v.re), 0) AS total
+      FROM cities ci
+      INNER JOIN user_cities uc ON uc.city_id = ci.id
+      LEFT JOIN visits v ON v.city_id = ci.id AND v.month = $1
+      WHERE uc.user_id = $2
+      GROUP BY ci.id, ci.name
+      ORDER BY total DESC
+    `;
+    const [results] = await app.connection.query(query, [month, userId]);
+    return results;
+    } else {
+    // Fallback: aggregate across all cities
+    const query = `
+      SELECT 
+        ci.name AS label,
+        COALESCE(SUM(v.gvi + v.gvm + v.rf + v.re), 0) AS total
+      FROM cities ci
+      LEFT JOIN visits v ON v.city_id = ci.id AND v.month = $1
+      GROUP BY ci.id, ci.name
+      ORDER BY total DESC
+    `;
+    const [results] = await app.connection.query(query, [month]);
+    return results;
+    }
   } catch (err) {
       console.error('Erro ao buscar dados do gráfico por município:', err);
       throw err;
@@ -452,20 +543,36 @@ async function getBarChartDataByMunicipality(app, userId, month) {
 */
 async function getBarChartDataByChurch(app, userId, month) {
   try {
-      const query = `
-          SELECT 
-              ch.name AS label,
-              COALESCE(SUM(v.gvi + v.gvm + v.rf + v.re), 0) AS total
-          FROM churches ch
-          INNER JOIN cities ci ON ci.id = ch.city_id
-          INNER JOIN user_cities uc ON uc.city_id = ci.id
-          LEFT JOIN visits v ON v.church_id = ch.id AND v.month = $1
-          WHERE uc.user_id = $2
-          GROUP BY ch.id, ch.name
-          ORDER BY total DESC
-      `;
-      const [results] = await app.connection.query(query, [month, userId]);
-      return results;
+      const hasAssign = await userHasAssignments(app, userId);
+      if (hasAssign) {
+        const query = `
+            SELECT 
+                ch."COMUM" AS label,
+                COALESCE(SUM(v.gvi + v.gvm + v.rf + v.re), 0) AS total
+            FROM churches ch
+            INNER JOIN cities ci ON ci.name = ch."CIDADE"
+            INNER JOIN user_cities uc ON uc.city_id = ci.id
+            LEFT JOIN visits v ON v.church_id = ch.id AND v.month = $1
+            WHERE uc.user_id = $2
+              GROUP BY ch.id, ch."COMUM"
+            ORDER BY total DESC
+        `;
+        const [results] = await app.connection.query(query, [month, userId]);
+        return results;
+      } else {
+        const query = `
+            SELECT 
+                ch."COMUM" AS label,
+                COALESCE(SUM(v.gvi + v.gvm + v.rf + v.re), 0) AS total
+            FROM churches ch
+            INNER JOIN cities ci ON ci.name = ch."CIDADE"
+            LEFT JOIN visits v ON v.church_id = ch.id AND v.month = $1
+            GROUP BY ch.id, ch."COMUM"
+            ORDER BY total DESC
+        `;
+        const [results] = await app.connection.query(query, [month]);
+        return results;
+      }
   } catch (err) {
       console.error('Erro ao buscar dados do gráfico por igreja:', err);
       throw err;
@@ -474,7 +581,7 @@ async function getBarChartDataByChurch(app, userId, month) {
 
 async function listNoServiceReport(app, userId, cityId = null) {
   const now = new Date();
-  const currentMonth = now.getMonth();
+  const currentMonth = now.getMonth() + 1;
   
   // Calcula os últimos 3 meses
   const months = [];
@@ -493,7 +600,7 @@ async function listNoServiceReport(app, userId, cityId = null) {
       WITH filtrado AS (
           SELECT v.church_id,
                  v.city_id,
-                 c.name AS church_name,
+                 c."COMUM" AS church_name,
                  ct.name AS city_name,
                  v.month,
                  v.gvi,
@@ -549,6 +656,67 @@ async function listNoServiceReport(app, userId, cityId = null) {
 }
 
 
+/**
+ * Monta os dados do gráfico (labels, values, título e eixo X) escolhendo
+ * agregação por município ou por igreja conforme disponibilidade.
+ */
+async function getChartData(app, userId, cityId = null, month = null) {
+  try {
+    // Tenta por município primeiro
+    const byMunicipality = await getBarChartDataByMunicipality(app, userId, month);
+    if (byMunicipality && byMunicipality.length > 0) {
+      return {
+        labels: byMunicipality.map(r => r.label),
+        values: byMunicipality.map(r => Number(r.total) || 0),
+        title: 'Visitas por Município',
+        xAxisLabel: 'Municípios'
+      };
+    }
+
+    // Fallback para igreja
+    const byChurch = await getBarChartDataByChurch(app, userId, month);
+    return {
+      labels: byChurch.map(r => r.label),
+      values: byChurch.map(r => Number(r.total) || 0),
+      title: 'Visitas por Casa de Oração',
+      xAxisLabel: 'Casas de Oração'
+    };
+  } catch (err) {
+    console.error('Erro em getChartData:', err);
+    return { labels: [], values: [], title: '', xAxisLabel: '' };
+  }
+}
+
+
+/**
+ * Gera os dados de relatório conforme o tipo solicitado.
+ * - type: 'general' | 'city' | 'no_service'
+ */
+async function getReport(app, userId, opts = {}) {
+  const { type = 'general', month = null, city_id = null } = opts;
+  try {
+    if (type === 'no_service') {
+      // retorna lista das casas que não tiveram serviço nos últimos 3 meses
+      return await listNoServiceReport(app, userId, city_id);
+    }
+
+    // Para 'city' e 'general' usamos listGroupedVisits
+    if (type === 'city') {
+      // city_id é obrigatório para relatório por cidade
+      const results = await listGroupedVisits(app, userId, city_id, month);
+      return results;
+    }
+
+    // general
+    const results = await listGroupedVisits(app, userId, null, month);
+    return results;
+  } catch (err) {
+    console.error('Erro em getReport:', err);
+    return [];
+  }
+}
+
+
 module.exports = {
   registerVisit,
   listVisitsByUser,
@@ -565,6 +733,7 @@ module.exports = {
   logVisitAction,
   getBarChartDataByMunicipality,
   getBarChartDataByChurch,
-  listNoServiceReport
-
+  listNoServiceReport,
+  getChartData,
+  getReport
 };

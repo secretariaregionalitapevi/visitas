@@ -365,7 +365,6 @@ body {
 </head>
 
 <body>
-    <%- include('head') %>
     <%- include('main_header') %>
 
     <main class="main-container">
@@ -418,6 +417,13 @@ body {
             </div>
         </div>
     </main>
+
+    <script>
+        // Recarrega automaticamente para voltar ao formulário após alguns segundos
+        setTimeout(() => {
+            window.location.href = '/';
+        }, 4000);
+    </script>
 
 
     <!-- Scripts -->

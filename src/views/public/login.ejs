@@ -38,6 +38,7 @@
                     <% } %>
 
                     <form action="/restrito/acesso" method="post" id="loginForm">
+                        <input type="hidden" name="returnTo" value="<%= returnTo || '' %>">
                         <!-- Email Field -->
                         <div class="form-group">
                             <label class="form-label" for="inputEmailAddress">E-mail</label>

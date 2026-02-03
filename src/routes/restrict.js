@@ -10,6 +10,7 @@ const login = require("../controllers/login");
 const visits = require("../controllers/visits");
 const users = require("../controllers/users");
 const isAdmin = require("../utils/adminMiddleware");
+const requireAuth = require("../utils/requireAuth");
 
 /**
  * Garante que cada handler passado para o Express é realmente uma função.
@@ -53,9 +54,13 @@ router.post(
   mustBeFn(login.authenticateUser, "login.authenticateUser")
 );
 
+// Todas as rotas abaixo requerem autenticação
+router.use(requireAuth);
+
 /**
  * Visitas
  */
+router.get("/visitas", mustBeFn(visits.listVisitsPage, "visits.listVisitsPage"));
 router.get("/visitas/:id", mustBeFn(visits.getVisit, "visits.getVisit"));
 router.put("/visitas/:id", mustBeFn(visits.updateVisit, "visits.updateVisit"));
 router.delete(

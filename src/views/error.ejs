@@ -2,7 +2,7 @@
 <html lang="pt-br">
     <style>
         /* ==============================================
-   PÁGINA DE ERRO - ESTILOS ESPECÍFICOS
+   PÃGINA DE ERRO - ESTILOS ESPECÃFICOS
 ============================================== */
 
 /* Container principal do erro */
@@ -52,7 +52,7 @@
     100% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
 }
 
-/* Ícone de erro */
+/* Ãcone de erro */
 .error-icon {
     font-size: 4rem;
     color: #dc3545;
@@ -65,7 +65,7 @@
     50% { transform: scale(1.1); opacity: 0.8; }
 }
 
-/* Título de erro */
+/* TÃ­tulo de erro */
 .error-title {
     color: #dc3545;
     font-size: 2rem;
@@ -86,7 +86,7 @@
     border-left: 4px solid #dc3545;
 }
 
-/* Container dos botões */
+/* Container dos botÃµes */
 .error-buttons {
     display: flex;
     gap: 1rem;
@@ -95,7 +95,7 @@
     margin-top: 2rem;
 }
 
-/* Botões de ação */
+/* BotÃµes de aÃ§Ã£o */
 .error-btn {
     padding: 0.75rem 2rem;
     border-radius: 10px;
@@ -135,7 +135,7 @@
     color: white;
 }
 
-/* Adaptação para header existente */
+/* AdaptaÃ§Ã£o para header existente */
 .dashboard-header-error.error-header {
     background: linear-gradient(135deg, #dc3545, #c82333);
 }
@@ -195,7 +195,7 @@
     box-shadow: 0 15px 40px rgba(220, 53, 69, 0.15);
 }
 
-/* Animação de entrada */
+/* AnimaÃ§Ã£o de entrada */
 .error-card {
     animation: errorFadeIn 0.6s ease-out;
 }
@@ -210,6 +210,62 @@
     font-size: 24px;
     color: white;
  
+}
+
+.error-page-wrapper {
+    max-width: 840px;
+    margin: 24px auto 40px;
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.error-page-wrapper .app-header {
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(4, 61, 96, 0.16);
+}
+
+.error-page-wrapper .main-content {
+    padding: 0;
+}
+
+.error-page-wrapper .content-wrapper {
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    border: none;
+    box-shadow: none;
+}
+
+.error-page-wrapper .header-card {
+    margin-bottom: 0;
+    padding: 18px 20px;
+}
+
+.error-page-wrapper .dashboard-title {
+    font-size: 1.35rem;
+}
+
+.error-page-wrapper .dashboard-subtitle {
+    font-size: 0.95rem;
+}
+
+@media (max-width: 768px) {
+    .error-page-wrapper {
+        margin: 16px auto 28px;
+        padding: 0 14px;
+        gap: 12px;
+    }
+
+    .error-page-wrapper .header-card {
+        padding: 14px 16px;
+    }
+
+    .error-page-wrapper .dashboard-title {
+        font-size: 1.15rem;
+    }
 }
 
 @keyframes errorFadeIn {
@@ -245,53 +301,55 @@
 <%- include('head') %>
 
 <body class="private-body">
-    <!-- Header da Área Privada -->
-    <%- include('main_header') %>
-    
-    <!-- Conteúdo Principal -->
-    <main class="main-content">
-        <div class="content-wrapper">
-            <div class="header-card dashboard-header-error error-header">
-                <div class="dashboard-title-section">
-                    <div class="title-wrapper">
-                        <div class="title-icon-error">
-                            <i class="fas fa-exclamation-triangle"></i>
-                        </div>
-                        <div class="title-content">
-                            <h2 class="dashboard-title">Oops! Algo deu errado</h2>
-                            <p class="dashboard-subtitle">Encontramos um problema ao processar sua solicitação</p>
+    <div class="error-page-wrapper">
+        <!-- Header da Ãrea Privada -->
+        <%- include('main_header') %>
+        
+        <!-- ConteÃºdo Principal -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <div class="header-card dashboard-header-error error-header">
+                    <div class="dashboard-title-section">
+                        <div class="title-wrapper">
+                            <div class="title-icon-error">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="title-content">
+                                <h2 class="dashboard-title">Oops! Algo deu errado</h2>
+                                <p class="dashboard-subtitle">Encontramos um problema ao processar sua solicitaÃ§Ã£o</p>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="error-container">
-                <div class="error-card">
-                    <div class="error-icon">
-                        <i class="fas fa-exclamation-circle"></i>
-                    </div>
-                    
-                    <h3 class="error-title">Erro Encontrado</h3>
-                    
-                    <p class="error-message">
-                        <%= message %>
-                    </p>
-                    
-                    <div class="error-buttons">
-                        <a href="/" class="error-btn error-btn-primary">
-                            <i class="fas fa-home"></i>
-                            Voltar ao Início
-                        </a>
+                <div class="error-container">
+                    <div class="error-card">
+                        <div class="error-icon">
+                            <i class="fas fa-exclamation-circle"></i>
+                        </div>
                         
-                        <a href="javascript:history.back()" class="error-btn error-btn-secondary">
-                            <i class="fas fa-arrow-left"></i>
-                            Página Anterior
-                        </a>
+                        <h3 class="error-title">Erro Encontrado</h3>
+                        
+                        <p class="error-message">
+                            <%= message %>
+                        </p>
+                        
+                        <div class="error-buttons">
+                            <a href="/" class="error-btn error-btn-primary">
+                                <i class="fas fa-home"></i>
+                                Voltar ao InÃ­cio
+                            </a>
+                            
+                            <a href="javascript:history.back()" class="error-btn error-btn-secondary">
+                                <i class="fas fa-arrow-left"></i>
+                                PÃ¡gina Anterior
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </main>
+        </main>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

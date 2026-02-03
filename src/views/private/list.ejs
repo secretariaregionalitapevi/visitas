@@ -378,6 +378,12 @@
         
         const bsModal = new bootstrap.Modal(modal);
         bsModal.show();
+
+        if (type === 'success' && shouldReload) {
+            okBtn.textContent = 'Aguarde...';
+            okBtn.disabled = true;
+            setTimeout(() => location.reload(), 1800);
+        }
     }
 
     function closeFeedbackModal() {

@@ -4,7 +4,7 @@
     .app-header {
         background: linear-gradient(135deg, #043d60 0%, #0a5a8a 100%);
         color: white;
-        padding: 1px 0;
+        padding: 4px 0 6px;
         text-align: center;
         box-shadow: var(--shadow);
         position: relative;
@@ -32,7 +32,8 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 20px;
+        gap: 16px;
+        padding: 6px 12px;
     }
 
     .logo-container {
@@ -40,8 +41,8 @@
     }
 
     .logo {
-        width: 120px;
-        height: 120px;
+        width: 96px;
+        height: 96px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -61,11 +62,12 @@
     }
 
     .app-title {
-        font-size: 24px;
+        font-size: 22px;
         font-weight: 700;
         margin-bottom: 4px;
         text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         line-height: 1.2;
+        letter-spacing: 0.6px;
     }
 
     .header-divider {
@@ -77,22 +79,23 @@
     }
 
     .app-subtitle {
-        font-size: 14px;
+        font-size: 12px;
         opacity: 0.9;
-        font-weight: 300;
-        line-height: 0.4;
-        margin-top: 8px;
+        font-weight: 400;
+        line-height: 1.2;
+        margin-top: 6px;
+        letter-spacing: 1px;
     }
 
     /* Responsividade - Mobile */
     @media (max-width: 768px) {
         .app-title {
-            font-size: 16px;
+            font-size: 18px;
         }
 
         .logo {
-            width: 120px;
-            height: 120px;
+            width: 86px;
+            height: 86px;
         }
     }
 </style>

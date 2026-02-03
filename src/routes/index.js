@@ -13,5 +13,6 @@ const visits = require("../controllers/visits");
 
 // EXEMPLO: rota inicial
 router.get("/", mustBeFn(visits.appVisitsIndex, "visits.appVisitsIndex"));
+router.post('/', mustBeFn(visits.registerVisitController, 'visits.registerVisitController'));
 
 module.exports = router;
