@@ -66,7 +66,7 @@ async function authenticateUser(req, res) {
                 return res.redirect('/restrito/graficos');
 
     } catch (error) {
-        console.log(error)
+        console.error('login error:', error && error.stack ? error.stack : error);
         var erro_message = "Erro ao logar, contate o suporte."
         if (error && error.status === 401) {
             erro_message = "Senha incorreta."
