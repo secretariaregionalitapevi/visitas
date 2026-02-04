@@ -25,7 +25,14 @@ router.get('/health/db', async (req, res) => {
     });
   } catch (err) {
     console.error('health/db error:', err && err.stack ? err.stack : err);
-    return res.status(500).json({ ok: false, message: 'DB error' });
+    return res.status(500).json({
+      ok: false,
+      message: 'DB error',
+      error: {
+        code: err && err.code ? err.code : undefined,
+        detail: err && err.message ? err.message : String(err)
+      }
+    });
   }
 });
 
